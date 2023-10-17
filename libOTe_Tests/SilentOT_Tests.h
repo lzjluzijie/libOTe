@@ -10,6 +10,7 @@
 #include <cryptoTools/Common/CLP.h>
 
 void Tools_Pprf_test(const oc::CLP& cmd);
+void Tools_Pprf_subfield_test(const oc::CLP& cmd);
 void Tools_Pprf_trans_test(const oc::CLP& cmd);
 void Tools_Pprf_inter_test(const oc::CLP& cmd);
 void Tools_Pprf_blockTrans_test(const oc::CLP& cmd);

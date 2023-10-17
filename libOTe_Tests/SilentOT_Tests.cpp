@@ -1,6 +1,7 @@
 #include "SilentOT_Tests.h"
 
 #include "libOTe/Tools/SilentPprf.h"
+#include "libOTe/Tools/SubfieldPprf.h"
 #include "libOTe/TwoChooseOne/Silent/SilentOtExtSender.h"
 #include "libOTe/TwoChooseOne/Silent/SilentOtExtReceiver.h"
 #include <cryptoTools/Common/Log.h>
@@ -927,6 +928,126 @@ void Tools_Pprf_test(const CLP& cmd)
     throw UnitTestSkipped("ENABLE_SILENTOT not defined.");
 #endif
 }
+
+union conv128 {
+    unsigned __int128 u;
+    block m;
+};
+
+struct alignas(16) u128 {
+    unsigned __int128 value;
+    // Constructors
+    u128() : value(0) {}
+    u128(unsigned __int128 val) : value(val) {}
+    u128(block b) {
+        conv128 c;
+        c.m = b;
+        value = c.u;
+    }
+
+    // Conversion operator to unsigned __int128
+    operator unsigned __int128() const {
+        return value;
+    }
+
+    // Additional member function
+    void customFunction() {
+        std::cout << "This is a custom function for u128!" << std::endl;
+    }
+};
+
+// using u128 = unsigned __int128;
+// union conv128 {
+// 	u128 u;
+// 	block m;
+// };
+// static u128 fromBlock(const block& b) {
+// 	conv128 c;
+// 	c.m = b;
+// 	return c.u;
+// };
+
+void Tools_Pprf_subfield_test(const CLP& cmd)
+{
+#if defined(ENABLE_SILENTOT) || defined(ENABLE_SILENT_VOLE)
+
+    u64 depth = cmd.getOr("d", 3);;
+    u64 domain = 1ull << depth;
+    auto threads = cmd.getOr("t", 3ull);
+    u64 numPoints = cmd.getOr("s", 8);
+
+    PRNG prng(ZeroBlock);
+    
+    auto sockets = cp::LocalAsyncSocket::makePair();
+
+
+    auto format = PprfOutputFormat::Plain;
+    SilentSubfieldPprfSender<u128, u128> sender;
+    SilentSubfieldPprfReceiver<u128, u128> recver;
+
+    sender.configure(domain, numPoints);
+    recver.configure(domain, numPoints);
+
+    auto numOTs = sender.baseOtCount();
+    std::cout << "numOTs " << numOTs << std::endl;
+    std::vector<std::array<block, 2>> sendOTs(numOTs);
+    std::vector<block> recvOTs(numOTs);
+    BitVector recvBits = recver.sampleChoiceBits(domain, format, prng);
+
+    prng.get(sendOTs.data(), sendOTs.size());
+    for (u64 i = 0; i < numOTs; ++i)
+    {
+        recvOTs[i] = sendOTs[i][recvBits[i]];
+    }
+    sender.setBase(sendOTs);
+    recver.setBase(recvOTs);
+
+    Matrix<u128> sOut(domain, numPoints);
+    Matrix<u128> rOut(domain, numPoints);
+    std::vector<u64> points(numPoints);
+    recver.getPoints(points, format);
+
+    u128 ONE = 1;
+
+    auto p0 = sender.expand(sockets[0], {&ONE,1}, prng, sOut, format, true, threads);
+    auto p1 = recver.expand(sockets[1], prng, rOut, format, true, threads);
+
+    eval(p0, p1);
+
+    bool failed = false;
+
+
+    for (u64 j = 0; j < numPoints; ++j)
+    {
+
+        for (u64 i = 0; i < domain; ++i)
+        {
+
+            auto exp = sOut(i, j);
+            if (points[j] == i)
+                exp = exp ^ ONE;
+
+            if (exp != rOut(i, j))
+            {
+                failed = true;
+
+                if (cmd.isSet("v"))
+                    std::cout << Color::Red;
+            }
+            if (cmd.isSet("v"))
+                std::cout << "r[" << j << "][" << i << "] " // << exp << " " << rOut(i, j) 
+                << std::endl << Color::Default;
+        }
+    }
+
+    if (failed)
+        throw RTE_LOC;
+
+#else
+    throw UnitTestSkipped("ENABLE_SILENTOT not defined.");
+#endif
+}
+
 
 void Tools_Pprf_trans_test(const CLP& cmd)
 {
