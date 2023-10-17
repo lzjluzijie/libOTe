@@ -929,115 +929,209 @@ void Tools_Pprf_test(const CLP& cmd)
 #endif
 }
 
-union conv128 {
-    unsigned __int128 u;
-    block m;
-};
-
-struct alignas(16) u128 {
-    unsigned __int128 value;
-    // Constructors
-    u128() : value(0) {}
-    u128(unsigned __int128 val) : value(val) {}
-    u128(block b) {
-        conv128 c;
-        c.m = b;
-        value = c.u;
-    }
-
-    // Conversion operator to unsigned __int128
-    operator unsigned __int128() const {
-        return value;
-    }
-
-    // Additional member function
-    void customFunction() {
-        std::cout << "This is a custom function for u128!" << std::endl;
-    }
-};
-
-// using u128 = unsigned __int128;
 // union conv128 {
-// 	u128 u;
-// 	block m;
+//     unsigned __int128 u;
+//     block m;
 // };
-// static u128 fromBlock(const block& b) {
-// 	conv128 c;
-// 	c.m = b;
-// 	return c.u;
+
+// struct alignas(16) u128 {
+//     unsigned __int128 value;
+//     // Constructors
+//     u128() : value(0) {}
+//     u128(unsigned __int128 val) : value(val) {}
+//     u128(block b) {
+//         conv128 c;
+//         c.m = b;
+//         value = c.u;
+//     }
+
+//     // Conversion operator to unsigned __int128
+//     operator unsigned __int128() const {
+//         return value;
+//     }
+
+//     // Additional member function
+//     void customFunction() {
+//         std::cout << "This is a custom function for u128!" << std::endl;
+//     }
 // };
+
+using u128 = unsigned __int128;
+union conv128 {
+	u128 u;
+	block m;
+};
+static u128 fromBlock(const block& b) {
+	conv128 c;
+	c.m = b;
+	return c.u;
+};
+
+inline std::string u128ToString(u128 value) {
+  if (value == 0) {
+    return "0";
+  }
+
+  std::string result;
+  while (value > 0) {
+    uint64_t digit = value % 10;
+    result.push_back(static_cast<char>('0' + digit));
+    value /= 10;
+  }
+  reverse(result.begin(), result.end());
+  return result;
+}
 
 void Tools_Pprf_subfield_test(const CLP& cmd)
 {
 #if defined(ENABLE_SILENTOT) || defined(ENABLE_SILENT_VOLE)
 
-    u64 depth = cmd.getOr("d", 3);;
-    u64 domain = 1ull << depth;
-    auto threads = cmd.getOr("t", 3ull);
-    u64 numPoints = cmd.getOr("s", 8);
+    // u64 depth = cmd.getOr("d", 3);;
+    // u64 domain = 1ull << depth;
+    // auto threads = cmd.getOr("t", 3ull);
+    // u64 numPoints = cmd.getOr("s", 8);
+
+    // PRNG prng(ZeroBlock);
+    
+    // auto sockets = cp::LocalAsyncSocket::makePair();
+
+
+    // auto format = PprfOutputFormat::Plain;
+    // SilentSubfieldPprfSender<u128, u128> sender;
+    // sender.fromBlock = fromBlock;
+    // SilentSubfieldPprfReceiver<u128, u128> recver;
+    // recver.fromBlock = fromBlock;
+
+    // sender.configure(domain, numPoints);
+    // recver.configure(domain, numPoints);
+
+    // auto numOTs = sender.baseOtCount();
+    // std::cout << "numOTs " << numOTs << std::endl;
+    // std::vector<std::array<block, 2>> sendOTs(numOTs);
+    // std::vector<block> recvOTs(numOTs);
+    // BitVector recvBits = recver.sampleChoiceBits(domain, format, prng);
+
+    // prng.get(sendOTs.data(), sendOTs.size());
+    // for (u64 i = 0; i < numOTs; ++i)
+    // {
+    //     recvOTs[i] = sendOTs[i][recvBits[i]];
+    // }
+    // sender.setBase(sendOTs);
+    // recver.setBase(recvOTs);
+
+    // std::cout << "OK" << std::endl;
+
+    // Matrix<u128> sOut(domain, numPoints);
+    // Matrix<u128> rOut(domain, numPoints);
+    // std::vector<u64> points(numPoints);
+    // recver.getPoints(points, format);
+
+    // u128 ONE = 1;
+
+    // auto p0 = sender.expand(sockets[0], {&ONE,1}, prng, sOut, format, true, threads);
+    // auto p1 = recver.expand(sockets[1], prng, rOut, format, true, threads);
+
+    // eval(p0, p1);
+
+    // bool failed = false;
+
+
+    // for (u64 j = 0; j < numPoints; ++j)
+    // {
+
+    //     for (u64 i = 0; i < domain; ++i)
+    //     {
+
+    //         auto exp = sOut(i, j);
+    //         if (points[j] == i) {
+    //             std::cout << "points[" << j << "] == " << i << std::endl;
+    //             exp = exp + ONE;
+    //         }
+
+    //         if (exp != rOut(i, j))
+    //         {
+    //             failed = true;
+
+    //             if (cmd.isSet("v"))
+    //                 std::cout << Color::Red;
+    //         }
+    //         if (cmd.isSet("v"))
+    //             std::cout << "r[" << j << "][" << i << "] "  << u128ToString(exp) << " " << u128ToString(rOut(i, j)) << std::endl << Color::Default;
+    //     }
+    // }
+
+    // if (failed)
+    //     throw RTE_LOC;
+
+
+
+    u64 domain = cmd.getOr("d", 16);
+    auto threads = cmd.getOr("t", 1);
+    u64 numPoints = cmd.getOr("s", 1) * 8;
 
     PRNG prng(ZeroBlock);
-    
+
     auto sockets = cp::LocalAsyncSocket::makePair();
 
 
-    auto format = PprfOutputFormat::Plain;
+    auto format = PprfOutputFormat::Interleaved;
     SilentSubfieldPprfSender<u128, u128> sender;
+    sender.fromBlock = fromBlock;
     SilentSubfieldPprfReceiver<u128, u128> recver;
+    recver.fromBlock = fromBlock;
 
     sender.configure(domain, numPoints);
     recver.configure(domain, numPoints);
 
     auto numOTs = sender.baseOtCount();
-    std::cout << "numOTs " << numOTs << std::endl;
     std::vector<std::array<block, 2>> sendOTs(numOTs);
     std::vector<block> recvOTs(numOTs);
-    BitVector recvBits = recver.sampleChoiceBits(domain, format, prng);
+    BitVector recvBits = recver.sampleChoiceBits(domain * numPoints, format, prng);
+    //recvBits.randomize(prng);
 
+    //recvBits[16] = 1;
     prng.get(sendOTs.data(), sendOTs.size());
     for (u64 i = 0; i < numOTs; ++i)
     {
+        //recvBits[i] = 0;
         recvOTs[i] = sendOTs[i][recvBits[i]];
     }
     sender.setBase(sendOTs);
     recver.setBase(recvOTs);
 
-    Matrix<u128> sOut(domain, numPoints);
-    Matrix<u128> rOut(domain, numPoints);
+    //auto cols = (numPoints * domain + 127) / 128;
+    Matrix<u128> sOut2(numPoints * domain, 1);
+    Matrix<u128> rOut2(numPoints * domain, 1);
     std::vector<u64> points(numPoints);
     recver.getPoints(points, format);
 
     u128 ONE = 1;
-
-    auto p0 = sender.expand(sockets[0], {&ONE,1}, prng, sOut, format, true, threads);
-    auto p1 = recver.expand(sockets[1], prng, rOut, format, true, threads);
+    auto p0 = sender.expand(sockets[0], { &ONE, 1 }, prng, sOut2, format, true, threads);
+    auto p1 = recver.expand(sockets[1], prng, rOut2, format, true, threads);
 
     eval(p0, p1);
+    std::cout << "OK" << std::endl;
+//    std::sort(points.begin(), points.end());
+//    for (auto& p : points) {
+//      std::cout << p << std::endl;
+//    }
 
     bool failed = false;
-
-
-    for (u64 j = 0; j < numPoints; ++j)
+    for (u64 i = 0; i < sOut2.rows(); ++i)
     {
 
-        for (u64 i = 0; i < domain; ++i)
+        auto f = std::find(points.begin(), points.end(), i) != points.end();
+
+        auto exp = f ? sOut2(i) + ONE : sOut2(i);
+
+        if (rOut2(i) != exp)
         {
+            failed = true;
 
-            auto exp = sOut(i, j);
-            if (points[j] == i)
-                exp = exp ^ ONE;
-
-            if (exp != rOut(i, j))
-            {
-                failed = true;
-
-                if (cmd.isSet("v"))
-                    std::cout << Color::Red;
-            }
-            if (cmd.isSet("v"))
-                std::cout << "r[" << j << "][" << i << "] " // << exp << " " << rOut(i, j) 
-                << std::endl << Color::Default;
+            if (cmd.getOr("v", 0) > 1)
+                std::cout << Color::Red;
         }
+        std::cout << i << " " << u128ToString(rOut2(i)) << " " << u128ToString(exp) << std::endl << Color::Default;
     }
 
     if (failed)
@@ -1163,9 +1257,9 @@ void Tools_Pprf_inter_test(const CLP& cmd)
     //u64 domain = 13;// (1ull << depth) - 7;
     //u64 numPoints = 40;
 
-    u64 domain = cmd.getOr("d", 334);
-    auto threads = cmd.getOr("t", 3ull);
-    u64 numPoints = cmd.getOr("s", 5) * 8;
+    u64 domain = cmd.getOr("d", 16);
+    auto threads = cmd.getOr("t", 1);
+    u64 numPoints = cmd.getOr("s", 1) * 8;
     //bool mal = cmd.isSet("mal");
 
     PRNG prng(ZeroBlock);

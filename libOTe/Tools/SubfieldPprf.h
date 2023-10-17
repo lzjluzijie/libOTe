@@ -136,6 +136,7 @@ namespace osuCrypto
         }
         else if (oFormat == PprfOutputFormat::Interleaved)
         {
+            std::cout << "no op" << std::endl;
             // no op
         }
         else if (oFormat == PprfOutputFormat::Callback)
@@ -158,6 +159,7 @@ namespace osuCrypto
         Matrix<std::array<block, 2>> mBaseOTs;
         
         std::function<void(u64 treeIdx, span<AlignedArray<F, 8>>)> mOutputFn;
+        std::function<F (const block& b)> fromBlock;
 
         SilentSubfieldPprfSender() = default;
         SilentSubfieldPprfSender(const SilentSubfieldPprfSender&) = delete;
@@ -380,16 +382,6 @@ namespace osuCrypto
             // 2*j+1  on level i+1. 
             span<AlignedArray<block, 8>> getLevel(u64 i, u64 g)
             {
-
-                if (oFormat == PprfOutputFormat::Interleaved && i == pprf.mDepth)
-                {
-                    auto b = (AlignedArray<block, 8>*)output.data();
-                    auto forest = g / 8;
-                    assert(g % 8 == 0);
-                    b += forest * pprf.mDomain;
-                    return span<AlignedArray<block, 8>>(b, pprf.mDomain);
-                }
-
                 return mLevels[i];
             };
 
@@ -403,7 +395,7 @@ namespace osuCrypto
                     return span<AlignedArray<F, 8>>(b, pprf.mDomain);
                 }
 
-                return lastLevel;
+              throw RTE_LOC;
             }
 
             Expander(SilentSubfieldPprfSender& p, block seed, u64 treeIdx_,
@@ -436,10 +428,10 @@ namespace osuCrypto
                     tree = pprf.mTreeAlloc.get();
                     assert(tree.size() >= 1ull << (dd));
                     assert((u64)tree.data() % 32 == 0);
-                    mLevels.resize(dd);
+                    mLevels.resize(dd+1);
                     mLevels[0] = tree.subspan(0, 1);
                     auto rem = tree.subspan(mLevels[0].size());
-                    for (u64 i = 1; i < dd; i++)
+                    for (u64 i = 1; i < dd + 1; i++)
                     {
                         while ((u64)rem.data() % 32)
                             rem = rem.subspan(1);
@@ -447,7 +439,7 @@ namespace osuCrypto
                         mLevels[i] = rem.subspan(0, mLevels[i - 1].size() * 2);
                         rem = rem.subspan(mLevels[i].size());
                     }
-                    lastLevel.resize(mLevels[dd - 1].size());
+                    lastLevel.resize(mLevels[dd - 1].size() * 2);
                 }
                 // pprf.setTimePoint("SilentMultiPprfSender.alloc " + std::to_string(treeIdx));
 
@@ -490,23 +482,22 @@ namespace osuCrypto
                             // or on the right child (1).
                             for (u64 keep = 0; keep < 2; ++keep, ++childIdx)
                             {
+                                // The child that we will write in this iteration.
+                                auto& child = level1[childIdx];
+
+                                // The sum that this child node belongs to.
+                                auto& sum = sums[keep][d];
+
+                                // Each parent is expanded into the left and right children 
+                                // using a different AES fixed-key. Therefore our OWF is:
+                                //
+                                //    H(x) = (AES(k0, x) + x) || (AES(k1, x) + x);
+                                //
+                                // where each half defines one of the children.
+                                aes[keep].hashBlocks<8>(parent.data(), child.data());
+
                                 if (d < pprf.mDepth - 1) {
                                     // for intermediate levels, same as before
-
-                                    // The child that we will write in this iteration.
-                                    auto& child = level1[childIdx];
-
-                                    // The sum that this child node belongs to.
-                                    auto& sum = sums[keep][d];
-
-                                    // Each parent is expanded into the left and right children 
-                                    // using a different AES fixed-key. Therefore our OWF is:
-                                    //
-                                    //    H(x) = (AES(k0, x) + x) || (AES(k1, x) + x);
-                                    //
-                                    // where each half defines one of the children.
-                                    aes[keep].hashBlocks<8>(parent.data(), child.data());
-
                                     // Update the running sums for this level. We keep 
                                     // a left and right totals for each level.
                                     sum[0] = sum[0] ^ child[0];
@@ -519,25 +510,25 @@ namespace osuCrypto
                                     sum[7] = sum[7] ^ child[7];
                                 } else {
                                     // for last level, use F
-                                    auto& child = level1[childIdx];
-                                    aes[keep].hashBlocks<8>(parent.data(), child.data());
-                                    auto& realChild = lastLevel[childIdx];
+//                                    std::cout << lastLevel.size() << std::endl;
+//                                    std::cout << childIdx << std::endl;
+                                    auto& realChild = getLastLevel(pprf.mDepth, treeIdx)[childIdx];
                                     auto& lastSum = lastSums[keep];
-                                    realChild[0] = F(child[0]);
+                                    realChild[0] = pprf.fromBlock(child[0]);
                                     lastSum[0] = lastSum[0] + realChild[0];
-                                    realChild[1] = F(child[1]);
+                                    realChild[1] = pprf.fromBlock(child[1]);
                                     lastSum[1] = lastSum[1] + realChild[1];
-                                    realChild[2] = F(child[2]);
+                                    realChild[2] = pprf.fromBlock(child[2]);
                                     lastSum[2] = lastSum[2] + realChild[2];
-                                    realChild[3] = F(child[3]);
+                                    realChild[3] = pprf.fromBlock(child[3]);
                                     lastSum[3] = lastSum[3] + realChild[3];
-                                    realChild[4] = F(child[4]);
+                                    realChild[4] = pprf.fromBlock(child[4]);
                                     lastSum[4] = lastSum[4] + realChild[4];
-                                    realChild[5] = F(child[5]);
+                                    realChild[5] = pprf.fromBlock(child[5]);
                                     lastSum[5] = lastSum[5] + realChild[5];
-                                    realChild[6] = F(child[6]);
+                                    realChild[6] = pprf.fromBlock(child[6]);
                                     lastSum[6] = lastSum[6] + realChild[6];
-                                    realChild[7] = F(child[7]);
+                                    realChild[7] = pprf.fromBlock(child[7]);
                                     lastSum[7] = lastSum[7] + realChild[7];
                                 }
                             }
@@ -609,10 +600,10 @@ namespace osuCrypto
         #endif							
 
                             // Add the OT masks to the sums and send them over.
-                            lastOts[j][0] = lastOts[j][0] + F(masks[0]);
-                            lastOts[j][1] = lastOts[j][1] + F(masks[1]);
-                            lastOts[j][2] = lastOts[j][2] + F(masks[2]);
-                            lastOts[j][3] = lastOts[j][3] + F(masks[3]);
+                            lastOts[j][0] = lastOts[j][0] + pprf.fromBlock(masks[0]);
+                            lastOts[j][1] = lastOts[j][1] + pprf.fromBlock(masks[1]);
+                            lastOts[j][2] = lastOts[j][2] + pprf.fromBlock(masks[2]);
+                            lastOts[j][3] = lastOts[j][3] + pprf.fromBlock(masks[3]);
                             }
 
                         // pprf.setTimePoint("SilentMultiPprfSender.last " + std::to_string(treeIdx));
@@ -646,6 +637,17 @@ namespace osuCrypto
                     // s is a checksum that is used for malicious security. 
                     copyOut<F>(lvl, output, pprf.mPntCount, treeIdx, oFormat, pprf.mOutputFn);
 
+                    F tmp0 = 0;
+                    F tmp1 = 0;
+                    F tmp2 = 0;
+                    for (u64 i = 0; i < 16; i += 2) {
+                      tmp0 += lastLevel[i][0];
+                      tmp1 += lastLevel[i+1][0];
+                    }
+                    if (tmp0) {
+                      tmp2 = tmp1;
+                    };
+
                     // pprf.setTimePoint("SilentMultiPprfSender.copyOut " + std::to_string(treeIdx));
 
                     }
@@ -677,6 +679,7 @@ namespace osuCrypto
         TreeAllocator mTreeAlloc;
         block mDebugValue;
         std::function<void(u64 treeIdx, span<AlignedArray<F, 8>>)> mOutputFn;
+        std::function<F(const block& b)> fromBlock;
 
         SilentSubfieldPprfReceiver() = default;
         SilentSubfieldPprfReceiver(const SilentSubfieldPprfReceiver&) = delete;
@@ -858,7 +861,96 @@ namespace osuCrypto
         // activeChildXorDelta says whether the sender is trying to program the
         // active child to be its correct value XOR delta. If it is not, the
         // active child will just take a random value.
-        task<> expand(Socket& chl, PRNG& prng, MatrixView<F> output, PprfOutputFormat oFormat, bool activeChildXorDelta, u64 numThreads);
+        task<> expand(Socket& chl, PRNG& prng, MatrixView<F> output, PprfOutputFormat oFormat, bool activeChildXorDelta, u64 numThreads)
+        {
+            setTimePoint("SilentMultiPprfReceiver.start");
+
+            //lout << " d " << mDomain << " p " << mPntCount << " do " << mDepth << std::endl;
+
+            if (oFormat == PprfOutputFormat::Plain)
+            {
+                if (output.rows() != mDomain)
+                    throw RTE_LOC;
+
+                if (output.cols() != mPntCount)
+                    throw RTE_LOC;
+            }
+            else if (oFormat == PprfOutputFormat::BlockTransposed)
+            {
+                if (output.cols() != mDomain)
+                    throw RTE_LOC;
+
+                if (output.rows() != mPntCount)
+                    throw RTE_LOC;
+            }
+            else if (oFormat == PprfOutputFormat::InterleavedTransposed)
+            {
+                if (output.rows() != 128)
+                    throw RTE_LOC;
+
+                //if (output.cols() > (mDomain * mPntCount + 127) / 128)
+                //    throw RTE_LOC;
+
+                if (mPntCount & 7)
+                    throw RTE_LOC;
+            }
+            else if (oFormat == PprfOutputFormat::Interleaved)
+            {
+                if (output.cols() != 1)
+                    throw RTE_LOC;
+                if (mDomain & 1)
+                    throw RTE_LOC;
+                auto rows = output.rows();
+                if (rows > (mDomain * mPntCount) ||
+                    rows / 128 != (mDomain * mPntCount) / 128)
+                    throw RTE_LOC;
+                if (mPntCount & 7)
+                    throw RTE_LOC;
+            }
+            else if (oFormat == PprfOutputFormat::Callback)
+            {
+                if (mDomain & 1)
+                    throw RTE_LOC;
+                if (mPntCount & 7)
+                    throw RTE_LOC;
+            }
+            else
+            {
+                throw RTE_LOC;
+            }
+
+            mPoints.resize(roundUpTo(mPntCount, 8));
+            getPoints(mPoints, PprfOutputFormat::Plain);
+
+
+            MC_BEGIN(task<>, this, numThreads, oFormat, output, &chl, activeChildXorDelta,
+                i = u64{},
+                dd = u64{}
+            );
+
+
+            dd = mDepth + (oFormat == PprfOutputFormat::Interleaved ? 0 : 1);
+            mTreeAlloc.reserve(numThreads, (1ull << (dd)) + (32 * dd));
+            setTimePoint("SilentMultiPprfReceiver.reserve");
+
+            mExps.clear(); mExps.reserve(divCeil(mPntCount, 8));
+            for (i = 0; i < mPntCount; i += 8)
+            {
+                mExps.emplace_back(*this, chl.fork(), oFormat, output, activeChildXorDelta, i);
+                mExps.back().mFuture = macoro::make_eager(mExps.back().run());
+
+                //MC_AWAIT(mExps.back().run());
+            }
+
+            for (i = 0; i < mExps.size(); ++i)
+                MC_AWAIT(mExps[i].mFuture);
+            setTimePoint("SilentMultiPprfReceiver.join");
+
+            mBaseOTs = {};
+            setTimePoint("SilentMultiPprfReceiver.de-alloc");
+
+            MC_END();
+        }
 
         void clear()
         {
@@ -880,11 +972,12 @@ namespace osuCrypto
             std::array<AES, 2> aes;
 
             PprfOutputFormat oFormat;
-            MatrixView<block> output;
+            MatrixView<F> output;
 
             macoro::eager_task<void> mFuture;
 
             std::vector<span<AlignedArray<block, 8>>> mLevels;
+            std::vector<AlignedArray<F,8>> lastLevel;
 
             // mySums will hold the left and right GGM tree sums
              // for each level. For example mySums[5][0]  will
@@ -893,6 +986,10 @@ namespace osuCrypto
              // The sender will give of one of the full somes so we can
              // compute the missing inactive child.
             std::array<std::array<block, 8>, 2> mySums;
+
+            // sums for the last level
+            std::array<std::array<F, 8>, 2> lastSums;
+            std::vector<std::array<F, 4>> lastOts;
 
             // A buffer for receiving the sums from the other party.
             // These will be masked by the OT strings. 
@@ -906,9 +1003,6 @@ namespace osuCrypto
             //std::unique_ptr<block[]> uPtr_;
             span<AlignedArray<block, 8>> tree;
 
-            std::vector<std::array<block, 4>> lastOts;
-
-
             // Returns the i'th level of the current 8 trees. The 
             // children of node j on level i are located at 2*j and
             // 2*j+1  on level i+1. 
@@ -919,26 +1013,38 @@ namespace osuCrypto
                 //auto offset = (size - 1);
                 //auto b = (f ? ftree.begin() : tree.begin()) + offset;
         #else
+                return mLevels[i];
+        #endif
+                //return span<std::array<block, 8>>(b,e);
+            };
+
+        span<AlignedArray<F, 8>> getLastLevel(u64 i, u64 g, bool f = false)
+            {
+                //auto size = (1ull << i);
+        #ifdef DEBUG_PRINT_PPRF
+                //auto offset = (size - 1);
+                //auto b = (f ? ftree.begin() : tree.begin()) + offset;
+        #else
                 if (oFormat == PprfOutputFormat::Interleaved && i == pprf.mDepth)
                 {
-                    auto b = (AlignedArray<block, 8>*)output.data();
+                    auto b = (AlignedArray<F, 8>*)output.data();
                     auto forest = g / 8;
                     assert(g % 8 == 0);
                     b += forest * pprf.mDomain;
-                    auto zone = span<AlignedArray<block, 8>>(b, pprf.mDomain);
+                    auto zone = span<AlignedArray<F, 8>>(b, pprf.mDomain);
                     return zone;
                 }
 
                 //assert(tree.size());
                 //auto b = tree.begin() + offset;
 
-                return mLevels[i];
+                throw RTE_LOC;
         #endif
                 //return span<std::array<block, 8>>(b,e);
             };
 
 
-            Expander(SilentSubfieldPprfReceiver& p, Socket&& s, PprfOutputFormat of, MatrixView<block> o, bool activeChildXorDelta, u64 ti)
+            Expander(SilentSubfieldPprfReceiver& p, Socket&& s, PprfOutputFormat of, MatrixView<F> o, bool activeChildXorDelta, u64 ti)
                 : pprf(p)
                 , chl(std::move(s))
                 , mActiveChildXorDelta(activeChildXorDelta)
@@ -968,10 +1074,10 @@ namespace osuCrypto
             {
                 tree = pprf.mTreeAlloc.get();
                 assert(tree.size() >= 1ull << (dd));
-                mLevels.resize(dd);
+                mLevels.resize(dd+1); // todo: last level block are kept
                 mLevels[0] = tree.subspan(0, 1);
                 auto rem = tree.subspan(1);
-                for (u64 i = 1; i < dd; i++)
+                for (u64 i = 1; i < dd + 1; i++)
                 {
                     while ((u64)rem.data() % 32)
                         rem = rem.subspan(1);
@@ -979,6 +1085,7 @@ namespace osuCrypto
                     mLevels[i] = rem.subspan(0, mLevels[i - 1].size() * 2);
                     rem = rem.subspan(mLevels[i].size());
                 }
+                lastLevel.resize(mLevels[dd - 1].size() * 2);
             }
 
 
@@ -1028,6 +1135,8 @@ namespace osuCrypto
 
 
             // The number of real trees for this iteration.
+            memset(lastSums[0].data(), 0, mySums[0].size() * sizeof(F));
+            memset(lastSums[1].data(), 0, mySums[1].size() * sizeof(F));
             lastOts.resize(8);
 
             // This thread will process 8 trees at a time. It will interlace
@@ -1133,20 +1242,43 @@ namespace osuCrypto
                                 if (eq(parent[i], ZeroBlock))
                                     child[i] = ZeroBlock;
     #endif
-                            // Update the running sums for this level. We keep 
-                            // a left and right totals for each level. Note that
-                            // we are actually XOR in the incorrect value of the 
-                            // children of the active parent (assuming !DEBUG_PRINT_PPRF).
-                            // This is ok since we will later XOR off these incorrect values.
-                            auto& sum = mySums[keep];
-                            sum[0] = sum[0] ^ child[0];
-                            sum[1] = sum[1] ^ child[1];
-                            sum[2] = sum[2] ^ child[2];
-                            sum[3] = sum[3] ^ child[3];
-                            sum[4] = sum[4] ^ child[4];
-                            sum[5] = sum[5] ^ child[5];
-                            sum[6] = sum[6] ^ child[6];
-                            sum[7] = sum[7] ^ child[7];
+
+                            if (d < pprf.mDepth - 1) {
+                                // Same as before
+                                // Update the running sums for this level. We keep 
+                                // a left and right totals for each level. Note that
+                                // we are actually XOR in the incorrect value of the 
+                                // children of the active parent (assuming !DEBUG_PRINT_PPRF).
+                                // This is ok since we will later XOR off these incorrect values.
+                                auto& sum = mySums[keep];
+                                sum[0] = sum[0] ^ child[0];
+                                sum[1] = sum[1] ^ child[1];
+                                sum[2] = sum[2] ^ child[2];
+                                sum[3] = sum[3] ^ child[3];
+                                sum[4] = sum[4] ^ child[4];
+                                sum[5] = sum[5] ^ child[5];
+                                sum[6] = sum[6] ^ child[6];
+                                sum[7] = sum[7] ^ child[7];
+                            } else {
+                                auto& realChild = getLastLevel(pprf.mDepth, treeIdx)[childIdx];
+                                auto& lastSum = lastSums[keep];
+                                realChild[0] = pprf.fromBlock(child[0]);
+                                lastSum[0] = lastSum[0] + realChild[0];
+                                realChild[1] = pprf.fromBlock(child[1]);
+                                lastSum[1] = lastSum[1] + realChild[1];
+                                realChild[2] = pprf.fromBlock(child[2]);
+                                lastSum[2] = lastSum[2] + realChild[2];
+                                realChild[3] = pprf.fromBlock(child[3]);
+                                lastSum[3] = lastSum[3] + realChild[3];
+                                realChild[4] = pprf.fromBlock(child[4]);
+                                lastSum[4] = lastSum[4] + realChild[4];
+                                realChild[5] = pprf.fromBlock(child[5]);
+                                lastSum[5] = lastSum[5] + realChild[5];
+                                realChild[6] = pprf.fromBlock(child[6]);
+                                lastSum[6] = lastSum[6] + realChild[6];
+                                realChild[7] = pprf.fromBlock(child[7]);
+                                lastSum[7] = lastSum[7] + realChild[7];
+                            }
                         }
                     }
 
@@ -1206,6 +1338,17 @@ namespace osuCrypto
 
                     }
 
+                                        F tmp0 = 0;
+                                        F tmp1 = 0;
+                                        F tmp2 = 0;
+                                        for (u64 i = 0; i < 16; i += 2) {
+                                          tmp0 += lastLevel[i][0];
+                                          tmp1 += lastLevel[i+1][0];
+                                        }
+                                        if (tmp0) {
+                                          tmp2 = tmp1;
+                                        };
+
                 // pprf.setTimePoint("SilentMultiPprfReceiver.expand " + std::to_string(treeIdx));
 
                 //timer.setTimePoint("recv.expanded");
@@ -1213,7 +1356,7 @@ namespace osuCrypto
 
                 // copy the last level to the output. If desired, this is 
                 // where the transpose is performed. 
-                auto lvl = getLevel(pprf.mDepth, treeIdx);
+                auto lvl = getLastLevel(pprf.mDepth, treeIdx);
 
                 if (mActiveChildXorDelta)
                 {
@@ -1224,7 +1367,6 @@ namespace osuCrypto
                     // values. Two for each case (left active or right active).
                     //timer.setTimePoint("recv.recvLast");
 
-                    auto level = getLevel(pprf.mDepth, treeIdx);
                     auto d = pprf.mDepth - 1;
                     for (u64 j = 0; j < 8; ++j)
                     {
@@ -1249,26 +1391,29 @@ namespace osuCrypto
                         // the expended (random) OT strings with the lastOts values.
                         auto& ot0 = lastOts[j][2 * notAi + 0];
                         auto& ot1 = lastOts[j][2 * notAi + 1];
-                        ot0 = ot0 ^ masks[0];
-                        ot1 = ot1 ^ masks[1];
+                        ot0 = ot0 - pprf.fromBlock(masks[0]);
+                        ot1 = ot1 - pprf.fromBlock(masks[1]);
 
     #ifdef DEBUG_PRINT_PPRF
                         auto prev = level[inactiveChildIdx][j];
     #endif
 
-                        auto& inactiveChild = level[inactiveChildIdx][j];
-                        auto& activeChild = level[activeChildIdx][j];
+                        auto& inactiveChild = lvl[inactiveChildIdx][j];
+                        auto& activeChild = lvl[activeChildIdx][j];
 
                         // Fix the sums we computed previously to not include the
                         // incorrect child values. 
-                        auto inactiveSum = mySums[notAi][j] ^ inactiveChild;
-                        auto activeSum = mySums[notAi ^ 1][j] ^ activeChild;
+                        auto inactiveSum = lastSums[notAi][j] - inactiveChild;
+                        auto activeSum = lastSums[notAi ^ 1][j] - activeChild;
 
                         // Update the inactive and active child to have to correct 
                         // value by XORing their full sum with out partial sum, which
                         // gives us exactly the value we are missing.
-                        inactiveChild = ot0 ^ inactiveSum;
-                        activeChild = ot1 ^ activeSum;
+                        inactiveChild = ot0 - inactiveSum;
+                        activeChild = ot1 - activeSum;
+
+                        std::cout << "output size: " << output.size() << std::endl;
+                        std::cout << inactiveChildIdx << " " << activeChildIdx << std::endl;
 
     #ifdef DEBUG_PRINT_PPRF
                         auto fLevel1 = getLevel(d + 1, true);
@@ -1294,12 +1439,13 @@ namespace osuCrypto
 
                         // The index of the child on the active path.
                         auto activeChildIdx = pprf.mPoints[j + treeIdx];
-                        lvl[activeChildIdx][j] = ZeroBlock;
+                        lvl[activeChildIdx][j] = 0;
                     }
                 }
 
-                // s is a checksum that is used for malicious security. 
-                copyOut(lvl, output, pprf.mPntCount, treeIdx, oFormat, pprf.mOutputFn);
+                // s is a checksum that is used for malicious security.
+                std::cout << "receiver copyOut" << std::endl;
+                copyOut<F>(lvl, output, pprf.mPntCount, treeIdx, oFormat, pprf.mOutputFn);
 
                 // pprf.setTimePoint("SilentMultiPprfReceiver.copy " + std::to_string(treeIdx));
 

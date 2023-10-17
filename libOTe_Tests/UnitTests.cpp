@@ -58,6 +58,7 @@ namespace tests_libOTe
             tc.add("ExConvCode_encode_basic_test            ", ExConvCode_encode_basic_test);
 
             tc.add("Tools_Pprf_test                         ", Tools_Pprf_test);
+            tc.add("Tools_Pprf_subfield_test                ", Tools_Pprf_subfield_test);
             tc.add("Tools_Pprf_trans_test                   ", Tools_Pprf_trans_test);
             tc.add("Tools_Pprf_inter_test                   ", Tools_Pprf_inter_test);
             tc.add("Tools_Pprf_blockTrans_test              ", Tools_Pprf_blockTrans_test);
