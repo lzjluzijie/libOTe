@@ -353,7 +353,6 @@ namespace osuCrypto
 
             macoro::eager_task<void> mFuture;
             std::vector<span<AlignedArray<block,8>>> mLevels;
-            std::vector<AlignedArray<F,8>> lastLevel;
 
             //std::unique_ptr<block[]> uPtr_;
 
@@ -439,7 +438,6 @@ namespace osuCrypto
                         mLevels[i] = rem.subspan(0, mLevels[i - 1].size() * 2);
                         rem = rem.subspan(mLevels[i].size());
                     }
-                    lastLevel.resize(mLevels[dd - 1].size() * 2);
                 }
                 // pprf.setTimePoint("SilentMultiPprfSender.alloc " + std::to_string(treeIdx));
 
@@ -509,9 +507,6 @@ namespace osuCrypto
                                     sum[6] = sum[6] ^ child[6];
                                     sum[7] = sum[7] ^ child[7];
                                 } else {
-                                    // for last level, use F
-//                                    std::cout << lastLevel.size() << std::endl;
-//                                    std::cout << childIdx << std::endl;
                                     auto& realChild = getLastLevel(pprf.mDepth, treeIdx)[childIdx];
                                     auto& lastSum = lastSums[keep];
                                     realChild[0] = pprf.fromBlock(child[0]);
@@ -636,17 +631,6 @@ namespace osuCrypto
 
                     // s is a checksum that is used for malicious security. 
                     copyOut<F>(lvl, output, pprf.mPntCount, treeIdx, oFormat, pprf.mOutputFn);
-
-                    F tmp0 = 0;
-                    F tmp1 = 0;
-                    F tmp2 = 0;
-                    for (u64 i = 0; i < 16; i += 2) {
-                      tmp0 += lastLevel[i][0];
-                      tmp1 += lastLevel[i+1][0];
-                    }
-                    if (tmp0) {
-                      tmp2 = tmp1;
-                    };
 
                     // pprf.setTimePoint("SilentMultiPprfSender.copyOut " + std::to_string(treeIdx));
 
@@ -977,7 +961,6 @@ namespace osuCrypto
             macoro::eager_task<void> mFuture;
 
             std::vector<span<AlignedArray<block, 8>>> mLevels;
-            std::vector<AlignedArray<F,8>> lastLevel;
 
             // mySums will hold the left and right GGM tree sums
              // for each level. For example mySums[5][0]  will
@@ -1085,7 +1068,6 @@ namespace osuCrypto
                     mLevels[i] = rem.subspan(0, mLevels[i - 1].size() * 2);
                     rem = rem.subspan(mLevels[i].size());
                 }
-                lastLevel.resize(mLevels[dd - 1].size() * 2);
             }
 
 
@@ -1337,17 +1319,6 @@ namespace osuCrypto
     #endif
 
                     }
-
-                                        F tmp0 = 0;
-                                        F tmp1 = 0;
-                                        F tmp2 = 0;
-                                        for (u64 i = 0; i < 16; i += 2) {
-                                          tmp0 += lastLevel[i][0];
-                                          tmp1 += lastLevel[i+1][0];
-                                        }
-                                        if (tmp0) {
-                                          tmp2 = tmp1;
-                                        };
 
                 // pprf.setTimePoint("SilentMultiPprfReceiver.expand " + std::to_string(treeIdx));
 
