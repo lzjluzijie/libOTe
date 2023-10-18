@@ -34,9 +34,11 @@
 #include "libOTe/TwoChooseOne/OTExtInterface.h"
 
 namespace osuCrypto {
-template <typename G, typename F>
+template <typename TypeTrait>
 class NoisySubfieldVoleSender : public TimerAdapter {
  public:
+  using F = typename TypeTrait::F;
+  using G = typename TypeTrait::G;
   task<> send(F x, span<F> z, PRNG& prng,
                                OtReceiver& ot, Socket& chl) {
     MC_BEGIN(task<>, this, x, z, &prng, &ot, &chl, bv = BitVector((u8*)&x, 128),

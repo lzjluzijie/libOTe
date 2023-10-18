@@ -35,9 +35,11 @@
 
 namespace osuCrypto {
 
-template <typename G, typename F>
+template <typename TypeTrait>
 class NoisySubfieldVoleReceiver : public TimerAdapter {
  public:
+  using F = typename TypeTrait::F;
+  using G = typename TypeTrait::G;
   task<> receive(span<G> y, span<F> z, PRNG& prng,
                                     OtSender& ot, Socket& chl) {
     MC_BEGIN(task<>, this, y, z, &prng, &ot, &chl,

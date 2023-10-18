@@ -961,11 +961,6 @@ union conv128 {
 	u128 u;
 	block m;
 };
-static u128 fromBlock(const block& b) {
-	conv128 c;
-	c.m = b;
-	return c.u;
-};
 
 inline std::string u128ToString(u128 value) {
   if (value == 0) {
@@ -981,6 +976,23 @@ inline std::string u128ToString(u128 value) {
   reverse(result.begin(), result.end());
   return result;
 }
+
+struct TypeTrait
+{
+  using F = u128;
+  using G = u128;
+
+  static inline F fromBlock(const block& b) {
+    conv128 c{};
+    c.m = b;
+    return c.u;
+  }
+  static inline F powerOf2(u64 power) {
+    u128 ret = 1;
+    ret <<= power;
+    return ret;
+  }
+};
 
 void Tools_Pprf_subfield_test(const CLP& cmd)
 {
@@ -1064,6 +1076,11 @@ void Tools_Pprf_subfield_test(const CLP& cmd)
     //     throw RTE_LOC;
 
 
+    /*
+     * Currently there is a weird issue
+     * out/build/linux/frontend/frontend_libOTe -u 82 passed
+     * but out/build/linux/frontend/frontend_libOTe -u has error
+     */
 
     u64 domain = cmd.getOr("d", 16);
     auto threads = cmd.getOr("t", 1);
@@ -1075,10 +1092,8 @@ void Tools_Pprf_subfield_test(const CLP& cmd)
 
 
     auto format = PprfOutputFormat::Interleaved;
-    SilentSubfieldPprfSender<u128, u128> sender;
-    sender.fromBlock = fromBlock;
-    SilentSubfieldPprfReceiver<u128, u128> recver;
-    recver.fromBlock = fromBlock;
+    SilentSubfieldPprfSender<TypeTrait> sender;
+    SilentSubfieldPprfReceiver<TypeTrait> recver;
 
     sender.configure(domain, numPoints);
     recver.configure(domain, numPoints);
@@ -1128,10 +1143,13 @@ void Tools_Pprf_subfield_test(const CLP& cmd)
         {
             failed = true;
 
-            if (cmd.getOr("v", 0) > 1)
+            if (cmd.getOr("v", 2) > 1) {
                 std::cout << Color::Red;
+            }
         }
-        std::cout << i << " " << u128ToString(rOut2(i)) << " " << u128ToString(exp) << std::endl << Color::Default;
+        if (cmd.getOr("v", 2) > 1) {
+            std::cout << i << " " << u128ToString(rOut2(i)) << " " << u128ToString(exp) << std::endl << Color::Default;
+        }
     }
 
     if (failed)

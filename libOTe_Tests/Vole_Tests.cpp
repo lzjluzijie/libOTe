@@ -74,9 +74,30 @@ void Vole_Noisy_test(const oc::CLP& cmd)
 
 }
 
+using u128 = unsigned __int128;
+union conv128 {
+  u128 u;
+  block m;
+};
+struct TypeTrait
+{
+  using F = u128;
+  using G = u64;
+
+  static inline F fromBlock(const block& b) {
+    conv128 c{};
+    c.m = b;
+    return c.u;
+  }
+  static inline F powerOf2(u64 power) {
+    u128 ret = 1;
+    ret <<= power;
+    return ret;
+  }
+};
+
 void Vole_Subfield_test(const oc::CLP& cmd)
 {
-    using u128 = unsigned __int128;
     {
     Timer timer;
     timer.setTimePoint("start");
@@ -89,8 +110,8 @@ void Vole_Subfield_test(const oc::CLP& cmd)
     std::vector<u128> z0(n), z1(n);
     prng.get(y.data(), y.size());
 
-    NoisySubfieldVoleReceiver<u64, u128> recv;
-    NoisySubfieldVoleSender<u64, u128> send;
+    NoisySubfieldVoleReceiver<TypeTrait> recv;
+    NoisySubfieldVoleSender<TypeTrait> send;
 
     recv.setTimer(timer);
     send.setTimer(timer);

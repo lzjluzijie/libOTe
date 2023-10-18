@@ -148,18 +148,19 @@ namespace osuCrypto
     void interleavedPoints(span<u64> points, u64 domain, PprfOutputFormat format);
     u64 getActivePath(const span<u8>& choiceBits);
 
-    template<typename G, typename F>
+    template<typename TypeTrait>
     class SilentSubfieldPprfSender : public TimerAdapter
     {
     public:
+        using F = typename TypeTrait::F;
         u64 mDomain = 0, mDepth = 0, mPntCount = 0;
-        std::vector<G> mValue;
+        std::vector<typename TypeTrait::F> mValue;
         bool mPrint = false;
         TreeAllocator mTreeAlloc;
         Matrix<std::array<block, 2>> mBaseOTs;
         
         std::function<void(u64 treeIdx, span<AlignedArray<F, 8>>)> mOutputFn;
-        std::function<F (const block& b)> fromBlock;
+
 
         SilentSubfieldPprfSender() = default;
         SilentSubfieldPprfSender(const SilentSubfieldPprfSender&) = delete;
@@ -203,7 +204,7 @@ namespace osuCrypto
                 mBaseOTs(i) = baseMessages[i];
         }
 
-        task<> expand(Socket& chls, span<const G> value, PRNG& prng, span<F> output, PprfOutputFormat oFormat, bool activeChildXorDelta, u64 numThreads)
+        task<> expand(Socket& chls, span<const F> value, PRNG& prng, span<F> output, PprfOutputFormat oFormat, bool activeChildXorDelta, u64 numThreads)
         {
             MatrixView<F> o(output.data(), output.size(), 1);
             return expand(chls, value, prng, o, oFormat, activeChildXorDelta, numThreads);
@@ -211,7 +212,7 @@ namespace osuCrypto
 
         task<> expand(
             Socket& chl, 
-            span<const G> value, 
+            span<const F> value,
             PRNG& prng, 
             MatrixView<F> output, 
             PprfOutputFormat oFormat,
@@ -316,7 +317,7 @@ namespace osuCrypto
 
         }
 
-        void setValue(span<const G> value)
+        void setValue(span<const F> value)
         {
 
             mValue.resize(mPntCount);
@@ -509,21 +510,21 @@ namespace osuCrypto
                                 } else {
                                     auto& realChild = getLastLevel(pprf.mDepth, treeIdx)[childIdx];
                                     auto& lastSum = lastSums[keep];
-                                    realChild[0] = pprf.fromBlock(child[0]);
+                                    realChild[0] = TypeTrait::fromBlock(child[0]);
                                     lastSum[0] = lastSum[0] + realChild[0];
-                                    realChild[1] = pprf.fromBlock(child[1]);
+                                    realChild[1] = TypeTrait::fromBlock(child[1]);
                                     lastSum[1] = lastSum[1] + realChild[1];
-                                    realChild[2] = pprf.fromBlock(child[2]);
+                                    realChild[2] = TypeTrait::fromBlock(child[2]);
                                     lastSum[2] = lastSum[2] + realChild[2];
-                                    realChild[3] = pprf.fromBlock(child[3]);
+                                    realChild[3] = TypeTrait::fromBlock(child[3]);
                                     lastSum[3] = lastSum[3] + realChild[3];
-                                    realChild[4] = pprf.fromBlock(child[4]);
+                                    realChild[4] = TypeTrait::fromBlock(child[4]);
                                     lastSum[4] = lastSum[4] + realChild[4];
-                                    realChild[5] = pprf.fromBlock(child[5]);
+                                    realChild[5] = TypeTrait::fromBlock(child[5]);
                                     lastSum[5] = lastSum[5] + realChild[5];
-                                    realChild[6] = pprf.fromBlock(child[6]);
+                                    realChild[6] = TypeTrait::fromBlock(child[6]);
                                     lastSum[6] = lastSum[6] + realChild[6];
-                                    realChild[7] = pprf.fromBlock(child[7]);
+                                    realChild[7] = TypeTrait::fromBlock(child[7]);
                                     lastSum[7] = lastSum[7] + realChild[7];
                                 }
                             }
@@ -595,10 +596,10 @@ namespace osuCrypto
         #endif							
 
                             // Add the OT masks to the sums and send them over.
-                            lastOts[j][0] = lastOts[j][0] + pprf.fromBlock(masks[0]);
-                            lastOts[j][1] = lastOts[j][1] + pprf.fromBlock(masks[1]);
-                            lastOts[j][2] = lastOts[j][2] + pprf.fromBlock(masks[2]);
-                            lastOts[j][3] = lastOts[j][3] + pprf.fromBlock(masks[3]);
+                            lastOts[j][0] = lastOts[j][0] + TypeTrait::fromBlock(masks[0]);
+                            lastOts[j][1] = lastOts[j][1] + TypeTrait::fromBlock(masks[1]);
+                            lastOts[j][2] = lastOts[j][2] + TypeTrait::fromBlock(masks[2]);
+                            lastOts[j][3] = lastOts[j][3] + TypeTrait::fromBlock(masks[3]);
                             }
 
                         // pprf.setTimePoint("SilentMultiPprfSender.last " + std::to_string(treeIdx));
@@ -649,10 +650,11 @@ namespace osuCrypto
     };
 
 
-    template<typename G, typename F>
+    template<typename TypeTrait>
     class SilentSubfieldPprfReceiver : public TimerAdapter
     {
     public:
+        using F = typename TypeTrait::F;
         u64 mDomain = 0, mDepth = 0, mPntCount = 0;
 
         std::vector<u64> mPoints;
@@ -1244,21 +1246,21 @@ namespace osuCrypto
                             } else {
                                 auto& realChild = getLastLevel(pprf.mDepth, treeIdx)[childIdx];
                                 auto& lastSum = lastSums[keep];
-                                realChild[0] = pprf.fromBlock(child[0]);
+                                realChild[0] = TypeTrait::fromBlock(child[0]);
                                 lastSum[0] = lastSum[0] + realChild[0];
-                                realChild[1] = pprf.fromBlock(child[1]);
+                                realChild[1] = TypeTrait::fromBlock(child[1]);
                                 lastSum[1] = lastSum[1] + realChild[1];
-                                realChild[2] = pprf.fromBlock(child[2]);
+                                realChild[2] = TypeTrait::fromBlock(child[2]);
                                 lastSum[2] = lastSum[2] + realChild[2];
-                                realChild[3] = pprf.fromBlock(child[3]);
+                                realChild[3] = TypeTrait::fromBlock(child[3]);
                                 lastSum[3] = lastSum[3] + realChild[3];
-                                realChild[4] = pprf.fromBlock(child[4]);
+                                realChild[4] = TypeTrait::fromBlock(child[4]);
                                 lastSum[4] = lastSum[4] + realChild[4];
-                                realChild[5] = pprf.fromBlock(child[5]);
+                                realChild[5] = TypeTrait::fromBlock(child[5]);
                                 lastSum[5] = lastSum[5] + realChild[5];
-                                realChild[6] = pprf.fromBlock(child[6]);
+                                realChild[6] = TypeTrait::fromBlock(child[6]);
                                 lastSum[6] = lastSum[6] + realChild[6];
-                                realChild[7] = pprf.fromBlock(child[7]);
+                                realChild[7] = TypeTrait::fromBlock(child[7]);
                                 lastSum[7] = lastSum[7] + realChild[7];
                             }
                         }
@@ -1362,8 +1364,8 @@ namespace osuCrypto
                         // the expended (random) OT strings with the lastOts values.
                         auto& ot0 = lastOts[j][2 * notAi + 0];
                         auto& ot1 = lastOts[j][2 * notAi + 1];
-                        ot0 = ot0 - pprf.fromBlock(masks[0]);
-                        ot1 = ot1 - pprf.fromBlock(masks[1]);
+                        ot0 = ot0 - TypeTrait::fromBlock(masks[0]);
+                        ot1 = ot1 - TypeTrait::fromBlock(masks[1]);
 
     #ifdef DEBUG_PRINT_PPRF
                         auto prev = level[inactiveChildIdx][j];
