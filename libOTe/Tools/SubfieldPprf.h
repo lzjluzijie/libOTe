@@ -291,7 +291,7 @@ namespace osuCrypto
                 throw RTE_LOC;
 
             dd = mDepth + (oFormat == PprfOutputFormat::Interleaved ? 0 : 1);
-            mTreeAlloc.reserve(numThreads, (1ull << dd) + (32 * dd));
+            mTreeAlloc.reserve(numThreads, (1ull << (dd + 1)) + (32 * (dd+1)));
             setTimePoint("SilentMultiPprfSender.reserve");
 
             mExps.clear(); mExps.reserve(divCeil(mPntCount, 8));
@@ -916,7 +916,7 @@ namespace osuCrypto
 
 
             dd = mDepth + (oFormat == PprfOutputFormat::Interleaved ? 0 : 1);
-            mTreeAlloc.reserve(numThreads, (1ull << (dd)) + (32 * dd));
+            mTreeAlloc.reserve(numThreads, (1ull << (dd+1)) + (32 * (dd+1)));
             setTimePoint("SilentMultiPprfReceiver.reserve");
 
             mExps.clear(); mExps.reserve(divCeil(mPntCount, 8));

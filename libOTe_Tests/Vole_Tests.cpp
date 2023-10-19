@@ -5,6 +5,8 @@
 #include "libOTe/Vole/Silent/SilentVoleReceiver.h"
 #include "libOTe/Vole/Subfield/NoisyVoleSender.h"
 #include "libOTe/Vole/Subfield/NoisyVoleReceiver.h"
+#include "libOTe/Vole/Subfield/SilentVoleSender.h"
+#include "libOTe/Vole/Subfield/SilentVoleReceiver.h"
 #include "cryptoTools/Network/Session.h"
 #include "cryptoTools/Network/IOService.h"
 #include "cryptoTools/Common/BitVector.h"
@@ -79,10 +81,24 @@ union conv128 {
   u128 u;
   block m;
 };
+inline std::string u128ToString(u128 value) {
+  if (value == 0) {
+    return "0";
+  }
+
+  std::string result;
+  while (value > 0) {
+    uint64_t digit = value % 10;
+    result.push_back(static_cast<char>('0' + digit));
+    value /= 10;
+  }
+  reverse(result.begin(), result.end());
+  return result;
+}
 struct TypeTrait
 {
   using F = u128;
-  using G = u64;
+  using G = u128;
 
   static inline F fromBlock(const block& b) {
     conv128 c{};
@@ -106,7 +122,7 @@ void Vole_Subfield_test(const oc::CLP& cmd)
     PRNG prng(seed);
 
     u128 x = prng.get();
-    std::vector<u64> y(n);
+    std::vector<u128> y(n);
     std::vector<u128> z0(n), z1(n);
     prng.get(y.data(), y.size());
 
@@ -256,6 +272,59 @@ void Vole_Silent_QuasiCyclic_test(const oc::CLP& cmd)
     timer.setTimePoint("done");
 #else
     throw UnitTestSkipped("ENABLE_BITPOLYMUL not defined." LOCATION);
+#endif
+}
+
+void Vole_Silent_Subfield_test(const oc::CLP& cmd) {
+#if defined(ENABLE_SILENTOT)
+  Timer timer;
+  timer.setTimePoint("start");
+  u64 n = cmd.getOr("n", 102043);
+  u64 nt = cmd.getOr("nt", std::thread::hardware_concurrency());
+  block seed = block(0, cmd.getOr("seed", 0));
+  PRNG prng(seed);
+
+  u128 x = TypeTrait::fromBlock(prng.get());
+  std::vector<u128> c(n), z0(n), z1(n);
+
+  SilentSubfieldVoleReceiver<TypeTrait> recv;
+  SilentSubfieldVoleSender<TypeTrait> send;
+
+  recv.mMultType = MultType::ExConv7x24;
+  send.mMultType = MultType::ExConv7x24;
+
+  recv.setTimer(timer);
+  send.setTimer(timer);
+
+  recv.mDebug = true;
+  send.mDebug = true;
+
+  auto chls = cp::LocalAsyncSocket::makePair();
+
+  timer.setTimePoint("net");
+
+  timer.setTimePoint("ot");
+//  fakeBase(n, nt, prng, x, recv, send);
+
+  // c * x = z + m
+
+  auto p0 = recv.silentReceive(span<u128>(c), span<u128>(z0), prng, chls[0]);
+  auto p1 = send.silentSend(x, span<u128>(z1), prng, chls[1]);
+
+  eval(p0, p1);
+  timer.setTimePoint("send");
+  for (u64 i = 0; i < n; ++i) {
+    u128 left = c[i] * x;
+    u128 right = z1[i] - z0[i];
+    if (left != right) {
+      std::cout << "bad " << i << "\n  c[i] " << u128ToString(c[i]) << " * x " << u128ToString(x) << " = " << u128ToString(left) << std::endl;
+      std::cout << "  z0[i] " << u128ToString(z0[i]) << " ^ z1 " << u128ToString(z1[i]) << " = " << u128ToString(right) << std::endl;
+      throw RTE_LOC;
+    }
+  }
+  timer.setTimePoint("done");
+#else
+  throw UnitTestSkipped("not defined." LOCATION);
 #endif
 }
 

@@ -109,6 +109,7 @@ namespace tests_libOTe
             tc.add("Vole_Noisy_test                         ", Vole_Noisy_test);
             tc.add("Vole_Subfield_test                      ", Vole_Subfield_test);
             tc.add("Vole_Silent_QuasiCyclic_test            ", Vole_Silent_QuasiCyclic_test);
+            tc.add("Vole_Silent_Subfield_test               ", Vole_Silent_Subfield_test);
             tc.add("Vole_Silent_Silver_test                 ", Vole_Silent_Silver_test);
             tc.add("Vole_Silent_paramSweep_test             ", Vole_Silent_paramSweep_test);
             tc.add("Vole_Silent_baseOT_test                 ", Vole_Silent_baseOT_test);

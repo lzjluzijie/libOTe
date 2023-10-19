@@ -72,7 +72,7 @@ namespace osuCrypto
         if (isConfigured() == false)
             throw std::runtime_error("configure must be called first");
 
-        
+
         delta = delta.value_or(prng.get<block>());
         xx.append(delta->data(), 128);
 
