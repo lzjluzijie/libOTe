@@ -413,7 +413,7 @@ namespace osuCrypto
                setTimePoint("SilentVoleSender.expand.pprf_transpose");
                if (mDebug)
                {
-//                 MC_AWAIT(checkRT(chl, delta));
+                 MC_AWAIT(checkRT(chl, delta));
                  setTimePoint("SilentVoleSender.expand.checkRT");
                }
 
@@ -469,7 +469,7 @@ namespace osuCrypto
                  case osuCrypto::MultType::ExConv21x24:
                    if (mTimer)
                      mExConvEncoder.setTimer(getTimer());
-//                   mExConvEncoder.dualEncode<F>(mB.subspan(0, mExConvEncoder.mCodeSize));
+                   mExConvEncoder.dualEncode<F>(mB.subspan(0, mExConvEncoder.mCodeSize));
                    break;
                  default:
                    throw RTE_LOC;
@@ -485,9 +485,9 @@ namespace osuCrypto
           MC_END();
         }
 
-        bool mDebug = false;
+        bool mDebug = true; // todo
 
-        task<> checkRT(Socket& chl, block delta) const
+        task<> checkRT(Socket& chl, F delta) const
         {
           MC_BEGIN(task<>,this, &chl, delta);
           MC_AWAIT(chl.send(delta));

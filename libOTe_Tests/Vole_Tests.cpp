@@ -284,7 +284,7 @@ void Vole_Silent_Subfield_test(const oc::CLP& cmd) {
   block seed = block(0, cmd.getOr("seed", 0));
   PRNG prng(seed);
 
-  u128 x = TypeTrait::fromBlock(prng.get());
+  u128 x = TypeTrait::fromBlock(AllOneBlock);
   std::vector<u128> c(n), z0(n), z1(n);
 
   SilentSubfieldVoleReceiver<TypeTrait> recv;

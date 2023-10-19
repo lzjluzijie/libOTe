@@ -102,7 +102,7 @@ namespace osuCrypto
 
         u64 mNumThreads = 1;
 
-        bool mDebug = false;
+        bool mDebug = true; // todo
 
         BitVector mIknpSendBaseChoice, mGapBaseChoice;
 
@@ -380,6 +380,10 @@ namespace osuCrypto
           mS.resize(mNumPartitions);
           mGen.getPoints(mS, getPprfFormat());
 
+          // todo
+          std::vector<u64> tmp = mS;
+          std::sort(tmp.begin(), tmp.end());
+
           auto j = mNumPartitions * mSizePer;
 
           for (u64 i = 0; i < (u64)mGapBaseChoice.size(); ++i)
@@ -566,7 +570,7 @@ namespace osuCrypto
 
                if (mDebug)
                {
-//                 MC_AWAIT(checkRT(chl));
+                 MC_AWAIT(checkRT(chl));
                  setTimePoint("SilentVoleReceiver.expand.checkRT");
                }
 
@@ -638,10 +642,10 @@ namespace osuCrypto
                  case osuCrypto::MultType::ExConv21x24:
                    if (mTimer)
                      mExConvEncoder.setTimer(getTimer());
-//                   mExConvEncoder.dualEncode2<G, F>(
-//                       mA.subspan(0, mExConvEncoder.mCodeSize),
-//                       mC.subspan(0, mExConvEncoder.mCodeSize)
-//                   );
+                   mExConvEncoder.dualEncode2<F, G>(
+                       mA.subspan(0, mExConvEncoder.mCodeSize),
+                       mC.subspan(0, mExConvEncoder.mCodeSize)
+                   );
                    break;
                  default:
                    throw RTE_LOC;
@@ -668,15 +672,23 @@ namespace osuCrypto
         task<> checkRT(Socket& chl) const
         {
           MC_BEGIN(task<>, this, &chl,
-                   B = AlignedVector<block>(mA.size()),
-                   sparseNoiseDelta = std::vector<block>(mA.size()),
-                   noiseDeltaShare2 = std::vector<block>(),
-                   delta = block{}
+                   B = AlignedVector<F>(mA.size()),
+                   sparseNoiseDelta = std::vector<F>(mA.size()),
+                   noiseDeltaShare2 = std::vector<F>(),
+                   delta = F{}
           );
                //std::vector<block> mB(mA.size());
                MC_AWAIT(chl.recv(delta));
                MC_AWAIT(chl.recv(B));
                MC_AWAIT(chl.recvResize(noiseDeltaShare2));
+
+               for (u64 i = 0; i < mA.size(); i++) {
+                  F left = delta * mC[i];
+                  F right = B[i] - mA[i];
+                  if (left != right) {
+                    throw RTE_LOC;
+                  }
+               }
 
                //check that at locations  mS[0],...,mS[..]
                // that we hold a sharing mA, mB of
@@ -690,106 +702,106 @@ namespace osuCrypto
                //  delta * mC = mA + mB
                //
 
-               if (noiseDeltaShare2.size() != mNoiseDeltaShare.size())
-                 throw RTE_LOC;
-
-               for (auto i : rng(mNoiseDeltaShare.size()))
-               {
-                 if ((mNoiseDeltaShare[i] ^ noiseDeltaShare2[i]) != mNoiseValues[i].gf128Mul(delta))
-                   throw RTE_LOC;
-               }
-
-               {
-
-                 for (auto i : rng(mNumPartitions* mSizePer))
-                 {
-                   auto iter = std::find(mS.begin(), mS.end(), i);
-                   if (iter != mS.end())
-                   {
-                     auto d = iter - mS.begin();
-
-                     if (mC[i] != mNoiseValues[d])
-                       throw RTE_LOC;
-
-                     if (mNoiseValues[d].gf128Mul(delta) != (mA[i] ^ B[i]))
-                     {
-                       std::cout << "bad vole base correlation, mA[i] + mB[i] != mC[i] * delta" << std::endl;
-                       std::cout << "i     " << i << std::endl;
-                       std::cout << "mA[i] " << mA[i] << std::endl;
-                       std::cout << "mB[i] " << B[i] << std::endl;
-                       std::cout << "mC[i] " << mC[i] << std::endl;
-                       std::cout << "delta " << delta << std::endl;
-                       std::cout << "mA[i] + mB[i] " << (mA[i] ^ B[i]) << std::endl;
-                       std::cout << "mC[i] * delta " << (mC[i].gf128Mul(delta)) << std::endl;
-
-                       throw RTE_LOC;
-                     }
-                   }
-                   else
-                   {
-                     if (mA[i] != B[i])
-                     {
-                       std::cout << mA[i] << " " << B[i] << std::endl;
-                       throw RTE_LOC;
-                     }
-
-                     if (mC[i] != oc::ZeroBlock)
-                       throw RTE_LOC;
-                   }
-                 }
-
-                 u64 d = mNumPartitions;
-                 for (auto j : rng(mGapBaseChoice.size()))
-                 {
-                   auto idx = j + mNumPartitions * mSizePer;
-                   auto aa = mA.subspan(mNumPartitions * mSizePer);
-                   auto bb = B.subspan(mNumPartitions * mSizePer);
-                   auto cc = mC.subspan(mNumPartitions * mSizePer);
-                   auto noise = mNoiseValues.subspan(mNumPartitions);
-                   //auto noiseShare = mNoiseValues.subspan(mNumPartitions);
-                   if (mGapBaseChoice[j])
-                   {
-                     if (mS[d++] != idx)
-                       throw RTE_LOC;
-
-                     if (cc[j] != noise[j])
-                     {
-                       std::cout << "sparse noise vector mC is not the expected value" << std::endl;
-                       std::cout << "i j      " << idx << " " << j << std::endl;
-                       std::cout << "mC[i]    " << cc[j] << std::endl;
-                       std::cout << "noise[j] " << noise[j] << std::endl;
-                       throw RTE_LOC;
-                     }
-
-                     if (noise[j].gf128Mul(delta) != (aa[j] ^ bb[j]))
-                     {
-
-                       std::cout << "bad vole base GAP correlation, mA[i] + mB[i] != mC[i] * delta" << std::endl;
-                       std::cout << "i     " << idx << std::endl;
-                       std::cout << "mA[i] " << aa[j] << std::endl;
-                       std::cout << "mB[i] " << bb[j] << std::endl;
-                       std::cout << "mC[i] " << cc[j] << std::endl;
-                       std::cout << "delta " << delta << std::endl;
-                       std::cout << "mA[i] + mB[i] " << (aa[j] ^ bb[j]) << std::endl;
-                       std::cout << "mC[i] * delta " << (cc[j].gf128Mul(delta)) << std::endl;
-                       std::cout << "noise * delta " << (noise[j].gf128Mul(delta)) << std::endl;
-                       throw RTE_LOC;
-                     }
-
-                   }
-                   else
-                   {
-                     if (aa[j] != bb[j])
-                       throw RTE_LOC;
-
-                     if (cc[j] != oc::ZeroBlock)
-                       throw RTE_LOC;
-                   }
-                 }
-
-                 if (d != mS.size())
-                   throw RTE_LOC;
-               }
+//               if (noiseDeltaShare2.size() != mNoiseDeltaShare.size())
+//                 throw RTE_LOC;
+//
+//               for (auto i : rng(mNoiseDeltaShare.size()))
+//               {
+//                 if ((mNoiseDeltaShare[i] ^ noiseDeltaShare2[i]) != mNoiseValues[i].gf128Mul(delta))
+//                   throw RTE_LOC;
+//               }
+//
+//               {
+//
+//                 for (auto i : rng(mNumPartitions* mSizePer))
+//                 {
+//                   auto iter = std::find(mS.begin(), mS.end(), i);
+//                   if (iter != mS.end())
+//                   {
+//                     auto d = iter - mS.begin();
+//
+//                     if (mC[i] != mNoiseValues[d])
+//                       throw RTE_LOC;
+//
+//                     if (mNoiseValues[d].gf128Mul(delta) != (mA[i] ^ B[i]))
+//                     {
+//                       std::cout << "bad vole base correlation, mA[i] + mB[i] != mC[i] * delta" << std::endl;
+//                       std::cout << "i     " << i << std::endl;
+//                       std::cout << "mA[i] " << mA[i] << std::endl;
+//                       std::cout << "mB[i] " << B[i] << std::endl;
+//                       std::cout << "mC[i] " << mC[i] << std::endl;
+//                       std::cout << "delta " << delta << std::endl;
+//                       std::cout << "mA[i] + mB[i] " << (mA[i] ^ B[i]) << std::endl;
+//                       std::cout << "mC[i] * delta " << (mC[i].gf128Mul(delta)) << std::endl;
+//
+//                       throw RTE_LOC;
+//                     }
+//                   }
+//                   else
+//                   {
+//                     if (mA[i] != B[i])
+//                     {
+//                       std::cout << mA[i] << " " << B[i] << std::endl;
+//                       throw RTE_LOC;
+//                     }
+//
+//                     if (mC[i] != oc::ZeroBlock)
+//                       throw RTE_LOC;
+//                   }
+//                 }
+//
+//                 u64 d = mNumPartitions;
+//                 for (auto j : rng(mGapBaseChoice.size()))
+//                 {
+//                   auto idx = j + mNumPartitions * mSizePer;
+//                   auto aa = mA.subspan(mNumPartitions * mSizePer);
+//                   auto bb = B.subspan(mNumPartitions * mSizePer);
+//                   auto cc = mC.subspan(mNumPartitions * mSizePer);
+//                   auto noise = mNoiseValues.subspan(mNumPartitions);
+//                   //auto noiseShare = mNoiseValues.subspan(mNumPartitions);
+//                   if (mGapBaseChoice[j])
+//                   {
+//                     if (mS[d++] != idx)
+//                       throw RTE_LOC;
+//
+//                     if (cc[j] != noise[j])
+//                     {
+//                       std::cout << "sparse noise vector mC is not the expected value" << std::endl;
+//                       std::cout << "i j      " << idx << " " << j << std::endl;
+//                       std::cout << "mC[i]    " << cc[j] << std::endl;
+//                       std::cout << "noise[j] " << noise[j] << std::endl;
+//                       throw RTE_LOC;
+//                     }
+//
+//                     if (noise[j].gf128Mul(delta) != (aa[j] ^ bb[j]))
+//                     {
+//
+//                       std::cout << "bad vole base GAP correlation, mA[i] + mB[i] != mC[i] * delta" << std::endl;
+//                       std::cout << "i     " << idx << std::endl;
+//                       std::cout << "mA[i] " << aa[j] << std::endl;
+//                       std::cout << "mB[i] " << bb[j] << std::endl;
+//                       std::cout << "mC[i] " << cc[j] << std::endl;
+//                       std::cout << "delta " << delta << std::endl;
+//                       std::cout << "mA[i] + mB[i] " << (aa[j] ^ bb[j]) << std::endl;
+//                       std::cout << "mC[i] * delta " << (cc[j].gf128Mul(delta)) << std::endl;
+//                       std::cout << "noise * delta " << (noise[j].gf128Mul(delta)) << std::endl;
+//                       throw RTE_LOC;
+//                     }
+//
+//                   }
+//                   else
+//                   {
+//                     if (aa[j] != bb[j])
+//                       throw RTE_LOC;
+//
+//                     if (cc[j] != oc::ZeroBlock)
+//                       throw RTE_LOC;
+//                   }
+//                 }
+//
+//                 if (d != mS.size())
+//                   throw RTE_LOC;
+//               }
 
 
                //{
