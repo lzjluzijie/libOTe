@@ -315,7 +315,7 @@ void Vole_Silent_Subfield_test(const oc::CLP& cmd) {
   timer.setTimePoint("send");
   for (u64 i = 0; i < n; ++i) {
     u128 left = c[i] * x;
-    u128 right = z1[i] - z0[i];
+    u128 right = z0[i] - z1[i];
     if (left != right) {
       std::cout << "bad " << i << "\n  c[i] " << u128ToString(c[i]) << " * x " << u128ToString(x) << " = " << u128ToString(left) << std::endl;
       std::cout << "  z0[i] " << u128ToString(z0[i]) << " ^ z1 " << u128ToString(z1[i]) << " = " << u128ToString(right) << std::endl;

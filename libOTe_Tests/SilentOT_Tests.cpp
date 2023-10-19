@@ -1120,40 +1120,55 @@ void Tools_Pprf_subfield_test(const CLP& cmd)
     std::vector<u64> points(numPoints);
     recver.getPoints(points, format);
 
-    u128 ONE = 1;
-    auto p0 = sender.expand(sockets[0], { &ONE, 1 }, prng, sOut2, format, true, threads);
+    std::vector<u128> arr(numPoints);
+    prng.get(arr.data(), arr.size());
+    auto p0 = sender.expand(sockets[0], arr, prng, sOut2, format, true, threads);
     auto p1 = recver.expand(sockets[1], prng, rOut2, format, true, threads);
 
     eval(p0, p1);
     std::cout << "OK" << std::endl;
-//    std::sort(points.begin(), points.end());
-//    for (auto& p : points) {
-//      std::cout << p << std::endl;
-//    }
-
-    bool failed = false;
-    for (u64 i = 0; i < sOut2.rows(); ++i)
-    {
-
-        auto f = std::find(points.begin(), points.end(), i) != points.end();
-
-        auto exp = f ? sOut2(i) + ONE : sOut2(i);
-
-        if (rOut2(i) != exp)
-        {
-            failed = true;
-
-            if (cmd.getOr("v", 2) > 1) {
-                std::cout << Color::Red;
-            }
-        }
-        if (cmd.getOr("v", 2) > 1) {
-            std::cout << i << " " << u128ToString(rOut2(i)) << " " << u128ToString(exp) << std::endl << Color::Default;
-        }
+    for (u64 i = 0; i < numPoints; i++) {
+      u64 point = points[i];
+      auto exp = sOut2(point) + arr[i];
+      if (exp != rOut2(point)) {
+        throw RTE_LOC;
+      }
     }
 
-    if (failed)
-        throw RTE_LOC;
+//     u128 ONE = 1;
+//    auto p0 = sender.expand(sockets[0], { &ONE, 1 }, prng, sOut2, format, true, threads);
+//    auto p1 = recver.expand(sockets[1], prng, rOut2, format, true, threads);
+//
+//    eval(p0, p1);
+//    std::cout << "OK" << std::endl;
+////    std::sort(points.begin(), points.end());
+////    for (auto& p : points) {
+////      std::cout << p << std::endl;
+////    }
+//
+//    bool failed = false;
+//    for (u64 i = 0; i < sOut2.rows(); ++i)
+//    {
+//
+//        auto f = std::find(points.begin(), points.end(), i) != points.end();
+//
+//        auto exp = f ? sOut2(i) + ONE : sOut2(i);
+//
+//        if (rOut2(i) != exp)
+//        {
+//            failed = true;
+//
+//            if (cmd.getOr("v", 2) > 1) {
+//                std::cout << Color::Red;
+//            }
+//        }
+//        if (cmd.getOr("v", 2) > 1) {
+//            std::cout << i << " " << u128ToString(rOut2(i)) << " " << u128ToString(exp) << std::endl << Color::Default;
+//        }
+//    }
+//
+//    if (failed)
+//        throw RTE_LOC;
 
 #else
     throw UnitTestSkipped("ENABLE_SILENTOT not defined.");

@@ -445,6 +445,9 @@ namespace osuCrypto
                 // This thread will process 8 trees at a time. It will interlace
                 // the sets of trees are processed with the other threads. 
                 {
+                  memset(lastSums[0].data(), 0, lastSums[0].size() * sizeof(F));
+                  memset(lastSums[1].data(), 0, lastSums[1].size() * sizeof(F));
+
                     // The number of real trees for this iteration.
                     min = std::min<u64>(8, pprf.mPntCount - treeIdx);
                     //gTimer.setTimePoint("send.start" + std::to_string(treeIdx));
@@ -1119,8 +1122,10 @@ namespace osuCrypto
 
 
             // The number of real trees for this iteration.
-            memset(lastSums[0].data(), 0, mySums[0].size() * sizeof(F));
-            memset(lastSums[1].data(), 0, mySums[1].size() * sizeof(F));
+            memset(lastSums[0].data(), 0, lastSums[0].size() * sizeof(F));
+            memset(lastSums[1].data(), 0, lastSums[1].size() * sizeof(F));
+            memset(mySums[0].data(), 0, mySums[0].size() * sizeof(F));
+            memset(mySums[1].data(), 0, mySums[1].size() * sizeof(F));
             lastOts.resize(8);
 
             // This thread will process 8 trees at a time. It will interlace

@@ -493,7 +493,10 @@ namespace osuCrypto
           MC_BEGIN(task<>, this, n, &prng, &chl,
                    gapVals = std::vector<F>{},
                    myHash = std::array<u8, 32>{},
-                   theirHash = std::array<u8, 32>{}
+                   theirHash = std::array<u8, 32>{},
+                   // todo
+                   tmpshare=    std::vector<F>{},
+                   mbb =    std::vector<F>{}
 
           );
                gTimer.setTimePoint("SilentVoleReceiver.ot.enter");
@@ -544,7 +547,9 @@ namespace osuCrypto
                    aa[g] = gapVals[g] - TypeTrait::fromBlock(AES(mGapOts[g]).ecbEncBlock(ZeroBlock)) - noiseShares[g];
                  }
                  else
+                 {
                    aa[g] = TypeTrait::fromBlock(mGapOts[g]);
+                 }
                }
 
                setTimePoint("SilentVoleReceiver.recvGap");
@@ -556,6 +561,19 @@ namespace osuCrypto
                // expand the seeds into mA
                MC_AWAIT(mGen.expand(chl, prng, mA.subspan(0, mNumPartitions * mSizePer), PprfOutputFormat::Interleaved, true, mNumThreads));
 
+               tmpshare.resize(mNumPartitions);
+               mbb.resize(mNumPartitions * mSizePer);
+               MC_AWAIT(chl.recv(tmpshare));
+               MC_AWAIT(chl.recv(mbb));
+
+               for (u64 i = 0; i < mNumPartitions; i++) {
+                 u64 point = mS[i];
+                 auto exp = mbb[point] + tmpshare[i];
+                 if (exp != mA[point]) {
+                   throw RTE_LOC;
+                 }
+               }
+
                setTimePoint("SilentVoleReceiver.expand.pprf_transpose");
 
                // populate the noisy coordinates of mC and
@@ -564,7 +582,7 @@ namespace osuCrypto
                {
                  auto pnt = mS[i];
                  mC[pnt] = mNoiseValues[i];
-                 mA[pnt] = mA[pnt] ^ mNoiseDeltaShare[i];
+                 mA[pnt] = mA[pnt] - mNoiseDeltaShare[i];
                }
 
 
@@ -642,10 +660,10 @@ namespace osuCrypto
                  case osuCrypto::MultType::ExConv21x24:
                    if (mTimer)
                      mExConvEncoder.setTimer(getTimer());
-                   mExConvEncoder.dualEncode2<F, G>(
-                       mA.subspan(0, mExConvEncoder.mCodeSize),
-                       mC.subspan(0, mExConvEncoder.mCodeSize)
-                   );
+//                   mExConvEncoder.dualEncode2<F, G>(
+//                       mA.subspan(0, mExConvEncoder.mCodeSize),
+//                       mC.subspan(0, mExConvEncoder.mCodeSize)
+//                   );
                    break;
                  default:
                    throw RTE_LOC;
@@ -684,7 +702,7 @@ namespace osuCrypto
 
                for (u64 i = 0; i < mA.size(); i++) {
                   F left = delta * mC[i];
-                  F right = B[i] - mA[i];
+                  F right = mA[i] - B[i];
                   if (left != right) {
                     throw RTE_LOC;
                   }
