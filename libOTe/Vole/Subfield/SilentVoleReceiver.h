@@ -658,12 +658,15 @@ namespace osuCrypto
 //                 }
                  case osuCrypto::MultType::ExConv7x24:
                  case osuCrypto::MultType::ExConv21x24:
-                   if (mTimer)
+                   if (mTimer) {
                      mExConvEncoder.setTimer(getTimer());
-//                   mExConvEncoder.dualEncode2<F, G>(
-//                       mA.subspan(0, mExConvEncoder.mCodeSize),
-//                       mC.subspan(0, mExConvEncoder.mCodeSize)
-//                   );
+                   }
+
+                   mExConvEncoder.dualEncode2<F, G>(
+                       mA.subspan(0, mExConvEncoder.mCodeSize),
+                       mC.subspan(0, mExConvEncoder.mCodeSize)
+                   );
+
                    break;
                  default:
                    throw RTE_LOC;

@@ -250,7 +250,7 @@ void ExConvCode_encode_u128_test(const oc::CLP& cmd)
       {
         u64 n = 1024;
         ExConvCode code;
-        code.config(n, n*2, 7, 24, true);
+        code.config(n / 2, n, 7, 24, true);
 
         PRNG prng(ZeroBlock);
         block delta = prng.get<block>();
@@ -262,9 +262,9 @@ void ExConvCode_encode_u128_test(const oc::CLP& cmd)
           z1[i] = z0[i] ^ delta.gf128Mul(y[i]);
         }
 
-        y.resize(2*n);
-        z0.resize(2*n);
-        z1.resize(2*n);
+//        y.resize(2*n);
+//        z0.resize(2*n);
+//        z1.resize(2*n);
 
         code.dualEncode<block>(z1);
         code.dualEncode2<block, block>(z0, y);
@@ -281,7 +281,7 @@ void ExConvCode_encode_u128_test(const oc::CLP& cmd)
       {
         u64 n = 1024;
         ExConvCode code;
-        code.config(n, n*2, 7, 24, true);
+        code.config(n / 2, n, 7, 24, true);
 
         PRNG prng(ZeroBlock);
         u128 delta = fromBlock(prng.get<block>());
@@ -293,9 +293,9 @@ void ExConvCode_encode_u128_test(const oc::CLP& cmd)
           z1[i] = z0[i] + delta * y[i];
         }
 
-        y.resize(2*n);
-        z0.resize(2*n);
-        z1.resize(2*n);
+//        y.resize(2*n);
+//        z0.resize(2*n);
+//        z1.resize(2*n);
 
         code.dualEncode<u128>(z1);
         code.dualEncode2<u128, u128>(z0, y);
