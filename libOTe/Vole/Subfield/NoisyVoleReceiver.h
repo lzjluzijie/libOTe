@@ -43,7 +43,7 @@ class NoisySubfieldVoleReceiver : public TimerAdapter {
   task<> receive(span<G> y, span<F> z, PRNG& prng,
                                     OtSender& ot, Socket& chl) {
     MC_BEGIN(task<>, this, y, z, &prng, &ot, &chl,
-             otMsg = AlignedUnVector<std::array<block, 2>>{128});
+             otMsg = AlignedUnVector<std::array<block, 2>>{sizeof(F) * 8});
 
     setTimePoint("NoisyVoleReceiver.ot.begin");
 
@@ -61,39 +61,38 @@ class NoisySubfieldVoleReceiver : public TimerAdapter {
                                     Socket& chl) {
     MC_BEGIN(task<>, this, y, z, otMsg, &chl, msg = Matrix<F>{},
              prng = std::move(PRNG{})
-             // buffer = std::vector<block>{}
     );
 
     setTimePoint("NoisyVoleReceiver.begin");
-    if (otMsg.size() != 128) throw RTE_LOC;
+    if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
     if (y.size() != z.size()) throw RTE_LOC;
     if (z.size() == 0) throw RTE_LOC;
 
     memset(z.data(), 0, sizeof(F) * z.size());
-    msg.resize(otMsg.size(), y.size());
+    msg.resize(otMsg.size(), z.size());
 
     for (u64 ii = 0; ii < (u64)otMsg.size(); ++ii) {
-      prng.SetSeed(otMsg[ii][0], z.size() * sizeof(F) / sizeof(block)); // todo
+      prng.SetSeed(otMsg[ii][0], z.size());
       auto& buffer = prng.mBuffer;
-      F *buf = (F *)buffer.data();
 
       for (u64 j = 0; j < (u64)y.size(); ++j) {
-        z[j] = z[j] + buf[j];
+        auto bufj = TypeTrait::fromBlock(buffer[j]);
+        z[j] = z[j] + bufj;
 
+        // todo
         F twoPowI = 0;
         *BitIterator((u8*)&twoPowI, ii) = 1;
 
         F yy = y[j] * twoPowI;
 
-        msg(ii, j) = yy + buf[j];
+        msg(ii, j) = yy + bufj;
       }
 
-      prng.SetSeed(otMsg[ii][1], z.size() * sizeof(F) / sizeof(block));
-      buf = (F *)buffer.data();
+      prng.SetSeed(otMsg[ii][1], z.size());
 
       for (u64 j = 0; j < (u64)y.size(); ++j) {
         // enc one message under the OT msg.
-        msg(ii, j) = msg(ii, j) + buf[j];
+        msg(ii, j) = msg(ii, j) + TypeTrait::fromBlock(buffer[j]);
       }
     }
 
@@ -103,6 +102,7 @@ class NoisySubfieldVoleReceiver : public TimerAdapter {
 
     MC_END();
   }
+
 };
 
 }  // namespace osuCrypto

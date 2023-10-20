@@ -41,7 +41,7 @@ class NoisySubfieldVoleSender : public TimerAdapter {
   using G = typename TypeTrait::G;
   task<> send(F x, span<F> z, PRNG& prng,
                                OtReceiver& ot, Socket& chl) {
-    MC_BEGIN(task<>, this, x, z, &prng, &ot, &chl, bv = BitVector((u8*)&x, 128),
+    MC_BEGIN(task<>, this, x, z, &prng, &ot, &chl, bv = BitVector((u8*)&x, sizeof(F) * 8),
              otMsg = AlignedUnVector<block>{128});
 
     setTimePoint("NoisyVoleSender.ot.begin");
@@ -57,9 +57,9 @@ class NoisySubfieldVoleSender : public TimerAdapter {
   task<> send(F x, span<F> z, PRNG& prng,
                                span<block> otMsg, Socket& chl) {
     MC_BEGIN(task<>, this, x, z, &prng, otMsg, &chl, msg = Matrix<F>{},
-             buffer = std::vector<block>{}, xIter = BitIterator{});
+             buffer = std::vector<block>{}, xb = BitVector{});
 
-    if (otMsg.size() != 128) throw RTE_LOC;
+    if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
     setTimePoint("NoisyVoleSender.main");
 
     msg.resize(otMsg.size(), z.size());
@@ -70,27 +70,22 @@ class NoisySubfieldVoleSender : public TimerAdapter {
     setTimePoint("NoisyVoleSender.recvMsg");
     buffer.resize(z.size());
 
-    xIter = BitIterator((u8*)&x);
+    xb = BitVector((u8*)&x, sizeof(F) * 8);
 
-    for (u64 i = 0; i < otMsg.size(); ++i, ++xIter) {
+    for (u64 i = 0; i < otMsg.size(); ++i) {
       PRNG pi(otMsg[i]);
       pi.get<block>(buffer);
-      F *buf = (F *)buffer.data();
-
-      if (*xIter) {
-        for (u64 j = 0; j < z.size(); ++j) {
-          buf[j] = msg(i, j) - buf[j];
-        }
-      }
 
       for (u64 j = 0; j < (u64)z.size(); ++j) {
-        z[j] = z[j] + buf[j];
+        F bufj = TypeTrait::fromBlock(buffer[j]);
+        z[j] = z[j] + (xb[i] ? msg(i,j) - bufj : bufj);
       }
     }
     setTimePoint("NoisyVoleSender.done");
 
     MC_END();
   }
+
 };
 }  // namespace osuCrypto
 
