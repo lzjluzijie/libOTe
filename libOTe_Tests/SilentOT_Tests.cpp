@@ -977,7 +977,7 @@ inline std::string u128ToString(u128 value) {
   return result;
 }
 
-struct TypeTrait
+struct TypeTrait128
 {
   using F = u128;
   using G = u128;
@@ -1092,8 +1092,8 @@ void Tools_Pprf_subfield_test(const CLP& cmd)
 
 
     auto format = PprfOutputFormat::Interleaved;
-    SilentSubfieldPprfSender<TypeTrait> sender;
-    SilentSubfieldPprfReceiver<TypeTrait> recver;
+    SilentSubfieldPprfSender<TypeTrait128> sender;
+    SilentSubfieldPprfReceiver<TypeTrait128> recver;
 
     sender.configure(domain, numPoints);
     recver.configure(domain, numPoints);

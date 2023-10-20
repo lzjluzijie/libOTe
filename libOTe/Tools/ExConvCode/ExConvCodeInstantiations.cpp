@@ -19,9 +19,15 @@ namespace osuCrypto
 
     template void ExConvCode::dualEncode<u128>(span<u128> e);
     template void ExConvCode::dualEncode<u128>(span<u128> e, span<u128> w);
+    template void ExConvCode::dualEncode2<u8, u8>(span<u8>, span<u8> e);
     template void ExConvCode::dualEncode2<u128, u8>(span<u128>, span<u8> e);
     template void ExConvCode::dualEncode2<u128, u128>(span<u128>, span<u128> e);
 
     template void ExConvCode::accumulate<u128, u8>(span<u128>, span<u8> e);
     template void ExConvCode::accumulate<u128, u128>(span<u128>, span<u128> e);
+
+    template void ExConvCode::dualEncode<u64>(span<u64> e);
+    template void ExConvCode::dualEncode<u64>(span<u64> e, span<u64> w);
+    template void ExConvCode::dualEncode2<u64, u64>(span<u64>, span<u64> e);
+    template void ExConvCode::accumulate<u64, u64>(span<u64>, span<u64> e);
 }

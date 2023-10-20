@@ -315,8 +315,6 @@ namespace osuCrypto
         u64 j = i + 1;
         if (width)
         {
-            auto xii = _mm_load_ps((float*)(xx + i));
-
             if (q + width > qe)
             {
                 refill(prng);
@@ -342,7 +340,12 @@ namespace osuCrypto
                 b[6] = rnd.slli_epi32<6>();
                 b[7] = rnd.slli_epi32<7>();
 
+              if constexpr (std::is_same<block, T>::value) {
+                accOneHelper<T, rangeCheck>(xx, _mm_setzero_ps(), j, i, size, b);
+              } else {
+                My__m128 xii = _mm_set_ps(0.0f, 0.0f, 0.0f, 0.0f);
                 accOneHelper<T, rangeCheck>(xx, xii, j, i, size, b);
+              }
             }
         }
 
@@ -368,8 +371,7 @@ namespace osuCrypto
         u64 j = i + 1;
         if (width)
         {
-            auto xii0 = _mm_load_ps((float*)(xx0 + i));
-            auto xii1 = _mm_load_ps((float*)(xx1 + i));
+
 
             if (q + width > qe)
             {
@@ -395,8 +397,18 @@ namespace osuCrypto
                 b[6] = rnd.slli_epi32<6>();
                 b[7] = rnd.slli_epi32<7>();
 
+              if constexpr (std::is_same<block, T0>::value) {
+                auto xii0 = _mm_load_ps((float*)(xx0 + i));
                 accOneHelper<T0, rangeCheck>(xx0, xii0, j, i, size, b);
+              } else {
+                accOneHelper<T0, rangeCheck>(xx0, _mm_setzero_ps(), j, i, size, b);
+              }
+              if constexpr (std::is_same<block, T1>::value) {
+                auto xii1 = _mm_load_ps((float*)(xx1 + i));
                 accOneHelper<T1, rangeCheck>(xx1, xii1, j, i, size, b);
+              } else {
+                accOneHelper<T1, rangeCheck>(xx1, _mm_setzero_ps(), j, i, size, b);
+              }
             }
         }
 
