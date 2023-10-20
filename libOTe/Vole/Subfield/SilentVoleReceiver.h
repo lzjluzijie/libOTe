@@ -662,10 +662,12 @@ namespace osuCrypto
                      mExConvEncoder.setTimer(getTimer());
                    }
 
-                   mExConvEncoder.dualEncode2<F, G>(
-                       mA.subspan(0, mExConvEncoder.mCodeSize),
-                       mC.subspan(0, mExConvEncoder.mCodeSize)
-                   );
+                   mExConvEncoder.dualEncode<F>(mA.subspan(0, mExConvEncoder.mCodeSize));
+                   mExConvEncoder.dualEncode<G>(mC.subspan(0, mExConvEncoder.mCodeSize));
+//                   mExConvEncoder.dualEncode2<F, G>(
+//                       mA.subspan(0, mExConvEncoder.mCodeSize),
+//                       mC.subspan(0, mExConvEncoder.mCodeSize)
+//                   );
 
                    break;
                  default:

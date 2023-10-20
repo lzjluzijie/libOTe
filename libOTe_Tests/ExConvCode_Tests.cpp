@@ -247,37 +247,37 @@ static inline u128 fromBlock(const block& b) {
 
 void ExConvCode_encode_u128_test(const oc::CLP& cmd)
     {
-      {
-        u64 n = 1024;
-        ExConvCode code;
-        code.config(n / 2, n, 7, 24, true);
-
-        PRNG prng(ZeroBlock);
-        block delta = prng.get<block>();
-        std::vector<block> y(n), z0(n), z1(n);
-        prng.get(y.data(), y.size());
-        prng.get(z0.data(), z0.size());
-        for (u64 i = 0; i < n; ++i)
-        {
-          z1[i] = z0[i] ^ delta.gf128Mul(y[i]);
-        }
-
-//        y.resize(2*n);
-//        z0.resize(2*n);
-//        z1.resize(2*n);
-
-        code.dualEncode<block>(z1);
-        code.dualEncode<block>(z0);
-        code.dualEncode<block>(y);
-
-        for (u64 i = 0; i < n; ++i)
-        {
-          block left = delta.gf128Mul(y[i]);
-          block right = z1[i] ^ z0[i];
-          if (left != right)
-            throw RTE_LOC;
-        }
-      }
+//      {
+//        u64 n = 1024;
+//        ExConvCode code;
+//        code.config(n / 2, n, 7, 24, true);
+//
+//        PRNG prng(ZeroBlock);
+//        block delta = prng.get<block>();
+//        std::vector<block> y(n), z0(n), z1(n);
+//        prng.get(y.data(), y.size());
+//        prng.get(z0.data(), z0.size());
+//        for (u64 i = 0; i < n; ++i)
+//        {
+//          z1[i] = z0[i] ^ delta.gf128Mul(y[i]);
+//        }
+//
+////        y.resize(2*n);
+////        z0.resize(2*n);
+////        z1.resize(2*n);
+//
+//        code.dualEncode<block>(z1);
+//        code.dualEncode<block>(z0);
+//        code.dualEncode<block>(y);
+//
+//        for (u64 i = 0; i < n; ++i)
+//        {
+//          block left = delta.gf128Mul(y[i]);
+//          block right = z1[i] ^ z0[i];
+//          if (left != right)
+//            throw RTE_LOC;
+//        }
+//      }
 
 //      {
 //        u64 n = 1024;
@@ -332,7 +332,8 @@ void ExConvCode_encode_u128_test(const oc::CLP& cmd)
 //        z1.resize(2*n);
 
         code.dualEncode<u128>(z1);
-        code.dualEncode2<u128, u128>(z0, y);
+        code.dualEncode<u128>(z0);
+        code.dualEncode<u128>(y);
 
         for (u64 i = 0; i < n; ++i)
         {

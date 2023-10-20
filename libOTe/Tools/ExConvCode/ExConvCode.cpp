@@ -252,14 +252,23 @@ namespace osuCrypto
             block tt[8];
             memcpy(tt, bb, 8 * 16);
 
-            if (!rangeCheck || j + 0 < size) xx[j + 0] = xx[j + 0] ^ tt[0];
-            if (!rangeCheck || j + 1 < size) xx[j + 1] = xx[j + 1] ^ tt[1];
-            if (!rangeCheck || j + 2 < size) xx[j + 2] = xx[j + 2] ^ tt[2];
-            if (!rangeCheck || j + 3 < size) xx[j + 3] = xx[j + 3] ^ tt[3];
-            if (!rangeCheck || j + 4 < size) xx[j + 4] = xx[j + 4] ^ tt[4];
-            if (!rangeCheck || j + 5 < size) xx[j + 5] = xx[j + 5] ^ tt[5];
-            if (!rangeCheck || j + 6 < size) xx[j + 6] = xx[j + 6] ^ tt[6];
-            if (!rangeCheck || j + 7 < size) xx[j + 7] = xx[j + 7] ^ tt[7];
+//            if (!rangeCheck || j + 0 < size) xx[j + 0] = xx[j + 0] ^ tt[0];
+//            if (!rangeCheck || j + 1 < size) xx[j + 1] = xx[j + 1] ^ tt[1];
+//            if (!rangeCheck || j + 2 < size) xx[j + 2] = xx[j + 2] ^ tt[2];
+//            if (!rangeCheck || j + 3 < size) xx[j + 3] = xx[j + 3] ^ tt[3];
+//            if (!rangeCheck || j + 4 < size) xx[j + 4] = xx[j + 4] ^ tt[4];
+//            if (!rangeCheck || j + 5 < size) xx[j + 5] = xx[j + 5] ^ tt[5];
+//            if (!rangeCheck || j + 6 < size) xx[j + 6] = xx[j + 6] ^ tt[6];
+//            if (!rangeCheck || j + 7 < size) xx[j + 7] = xx[j + 7] ^ tt[7];
+
+          if (!rangeCheck || j + 0 < size) xx[j + 0] = xx[j + 0] + tt[0];
+          if (!rangeCheck || j + 1 < size) xx[j + 1] = xx[j + 1] + tt[1];
+          if (!rangeCheck || j + 2 < size) xx[j + 2] = xx[j + 2] + tt[2];
+          if (!rangeCheck || j + 3 < size) xx[j + 3] = xx[j + 3] + tt[3];
+          if (!rangeCheck || j + 4 < size) xx[j + 4] = xx[j + 4] + tt[4];
+          if (!rangeCheck || j + 5 < size) xx[j + 5] = xx[j + 5] + tt[5];
+          if (!rangeCheck || j + 6 < size) xx[j + 6] = xx[j + 6] + tt[6];
+          if (!rangeCheck || j + 7 < size) xx[j + 7] = xx[j + 7] + tt[7];
         }
         else
         {
@@ -272,14 +281,23 @@ namespace osuCrypto
             auto bb6 = xx[i] * (b[6].get<i32>(0) < 0);
             auto bb7 = xx[i] * (b[7].get<i32>(0) < 0);
 
-            if (!rangeCheck || j + 0 < size) xx[j + 0] = xx[j + 0] ^ bb0;
-            if (!rangeCheck || j + 1 < size) xx[j + 1] = xx[j + 1] ^ bb1;
-            if (!rangeCheck || j + 2 < size) xx[j + 2] = xx[j + 2] ^ bb2;
-            if (!rangeCheck || j + 3 < size) xx[j + 3] = xx[j + 3] ^ bb3;
-            if (!rangeCheck || j + 4 < size) xx[j + 4] = xx[j + 4] ^ bb4;
-            if (!rangeCheck || j + 5 < size) xx[j + 5] = xx[j + 5] ^ bb5;
-            if (!rangeCheck || j + 6 < size) xx[j + 6] = xx[j + 6] ^ bb6;
-            if (!rangeCheck || j + 7 < size) xx[j + 7] = xx[j + 7] ^ bb7;
+//            if (!rangeCheck || j + 0 < size) xx[j + 0] = xx[j + 0] ^ bb0;
+//            if (!rangeCheck || j + 1 < size) xx[j + 1] = xx[j + 1] ^ bb1;
+//            if (!rangeCheck || j + 2 < size) xx[j + 2] = xx[j + 2] ^ bb2;
+//            if (!rangeCheck || j + 3 < size) xx[j + 3] = xx[j + 3] ^ bb3;
+//            if (!rangeCheck || j + 4 < size) xx[j + 4] = xx[j + 4] ^ bb4;
+//            if (!rangeCheck || j + 5 < size) xx[j + 5] = xx[j + 5] ^ bb5;
+//            if (!rangeCheck || j + 6 < size) xx[j + 6] = xx[j + 6] ^ bb6;
+//            if (!rangeCheck || j + 7 < size) xx[j + 7] = xx[j + 7] ^ bb7;
+
+          if (!rangeCheck || j + 0 < size) xx[j + 0] = xx[j + 0] + bb0;
+          if (!rangeCheck || j + 1 < size) xx[j + 1] = xx[j + 1] + bb1;
+          if (!rangeCheck || j + 2 < size) xx[j + 2] = xx[j + 2] + bb2;
+          if (!rangeCheck || j + 3 < size) xx[j + 3] = xx[j + 3] + bb3;
+          if (!rangeCheck || j + 4 < size) xx[j + 4] = xx[j + 4] + bb4;
+          if (!rangeCheck || j + 5 < size) xx[j + 5] = xx[j + 5] + bb5;
+          if (!rangeCheck || j + 6 < size) xx[j + 6] = xx[j + 6] + bb6;
+          if (!rangeCheck || j + 7 < size) xx[j + 7] = xx[j + 7] + bb7;
         }
     }
 
@@ -330,7 +348,8 @@ namespace osuCrypto
 
         if (!rangeCheck || j < size)
         {
-            auto xj = xx[j] ^ xx[i];
+//            auto xj = xx[j] ^ xx[i];
+            auto xj = xx[j] + xx[i];
             xx[j] = xj;
         }
     }
@@ -383,8 +402,10 @@ namespace osuCrypto
 
         if (!rangeCheck || j < size)
         {
-            auto xj0 = xx0[j] ^ xx0[i];
-            auto xj1 = xx1[j] ^ xx1[i];
+//            auto xj0 = xx0[j] ^ xx0[i];
+//            auto xj1 = xx1[j] ^ xx1[i];
+          auto xj0 = xx0[j] + xx0[i];
+          auto xj1 = xx1[j] + xx1[i];
             xx0[j] = xj0;
             xx1[j] = xj1;
         }

@@ -64,17 +64,17 @@ namespace osuCrypto
             w[7] = ee[rr[7]];
 
             auto ww =
-                w[0] ^
-                w[1] ^
-                w[2] ^
-                w[3] ^
-                w[4] ^
-                w[5] ^
-                w[6] ^
+                w[0] +
+                w[1] +
+                w[2] +
+                w[3] +
+                w[4] +
+                w[5] +
+                w[6] +
                 w[7];
 
             if constexpr (count > 8)
-                ww = ww ^ expandOne<T, count - 8>(ee, prng);
+                ww = ww + expandOne<T, count - 8>(ee, prng);
             return ww;
         }
         else
@@ -82,7 +82,7 @@ namespace osuCrypto
 
             auto r = prng.get();
             auto ww = expandOne<T, count - 1>(ee, prng);
-            return ww ^ ee[r];
+            return ww + ee[r];
         }
     }
 
@@ -216,14 +216,14 @@ namespace osuCrypto
                 case I:\
                 if constexpr(Add)\
                 {\
-                    ww[i + 0] = ww[i + 0] ^ expandOne<T, I>(ee, prng);\
-                    ww[i + 1] = ww[i + 1] ^ expandOne<T, I>(ee, prng);\
-                    ww[i + 2] = ww[i + 2] ^ expandOne<T, I>(ee, prng);\
-                    ww[i + 3] = ww[i + 3] ^ expandOne<T, I>(ee, prng);\
-                    ww[i + 4] = ww[i + 4] ^ expandOne<T, I>(ee, prng);\
-                    ww[i + 5] = ww[i + 5] ^ expandOne<T, I>(ee, prng);\
-                    ww[i + 6] = ww[i + 6] ^ expandOne<T, I>(ee, prng);\
-                    ww[i + 7] = ww[i + 7] ^ expandOne<T, I>(ee, prng);\
+                    ww[i + 0] = ww[i + 0] + expandOne<T, I>(ee, prng);\
+                    ww[i + 1] = ww[i + 1] + expandOne<T, I>(ee, prng);\
+                    ww[i + 2] = ww[i + 2] + expandOne<T, I>(ee, prng);\
+                    ww[i + 3] = ww[i + 3] + expandOne<T, I>(ee, prng);\
+                    ww[i + 4] = ww[i + 4] + expandOne<T, I>(ee, prng);\
+                    ww[i + 5] = ww[i + 5] + expandOne<T, I>(ee, prng);\
+                    ww[i + 6] = ww[i + 6] + expandOne<T, I>(ee, prng);\
+                    ww[i + 7] = ww[i + 7] + expandOne<T, I>(ee, prng);\
                 }\
                 else\
                 {\
@@ -255,10 +255,10 @@ namespace osuCrypto
                     for (auto j = 1ull; j < mExpanderWeight; ++j)
                     {
                         r = prng.get();
-                        wv = wv ^ ee[r];
+                        wv = wv + ee[r];
                     }
                     if constexpr (Add)
-                        ww[i + jj] = ww[i + jj] ^ wv;
+                        ww[i + jj] = ww[i + jj] + wv;
                     else
                         ww[i + jj] = wv;
 
@@ -271,10 +271,10 @@ namespace osuCrypto
         {
             auto wv = ee[prng.get()];
             for (auto j = 1ull; j < mExpanderWeight; ++j)
-                wv = wv ^ ee[prng.get()];
+                wv = wv + ee[prng.get()];
 
             if constexpr (Add)
-                ww[i] = ww[i] ^ wv;
+                ww[i] = ww[i] + wv;
             else
                 ww[i] = wv;
         }
