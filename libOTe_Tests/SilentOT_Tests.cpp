@@ -12,6 +12,9 @@
 #include "libOTe/Tools/Tools.h"
 #include "libOTe/Tools/QuasiCyclicCode.h"
 #include "Common.h"
+
+#include "libOTe/Vole/Subfield/Subfield.h"
+
 using namespace oc;
 
 void Tools_bitShift_test(const CLP& cmd)
@@ -929,158 +932,9 @@ void Tools_Pprf_test(const CLP& cmd)
 #endif
 }
 
-// union conv128 {
-//     unsigned __int128 u;
-//     block m;
-// };
-
-// struct alignas(16) u128 {
-//     unsigned __int128 value;
-//     // Constructors
-//     u128() : value(0) {}
-//     u128(unsigned __int128 val) : value(val) {}
-//     u128(block b) {
-//         conv128 c;
-//         c.m = b;
-//         value = c.u;
-//     }
-
-//     // Conversion operator to unsigned __int128
-//     operator unsigned __int128() const {
-//         return value;
-//     }
-
-//     // Additional member function
-//     void customFunction() {
-//         std::cout << "This is a custom function for u128!" << std::endl;
-//     }
-// };
-
-using u128 = unsigned __int128;
-union conv128 {
-	u128 u;
-	block m;
-};
-
-inline std::string u128ToString(u128 value) {
-  if (value == 0) {
-    return "0";
-  }
-
-  std::string result;
-  while (value > 0) {
-    uint64_t digit = value % 10;
-    result.push_back(static_cast<char>('0' + digit));
-    value /= 10;
-  }
-  reverse(result.begin(), result.end());
-  return result;
-}
-
-struct TypeTrait128
-{
-  using F = u128;
-  using G = u128;
-
-  static inline F fromBlock(const block& b) {
-    conv128 c{};
-    c.m = b;
-    return c.u;
-  }
-  static inline F powerOf2(u64 power) {
-    u128 ret = 1;
-    ret <<= power;
-    return ret;
-  }
-};
-
 void Tools_Pprf_subfield_test(const CLP& cmd)
 {
 #if defined(ENABLE_SILENTOT) || defined(ENABLE_SILENT_VOLE)
-
-    // u64 depth = cmd.getOr("d", 3);;
-    // u64 domain = 1ull << depth;
-    // auto threads = cmd.getOr("t", 3ull);
-    // u64 numPoints = cmd.getOr("s", 8);
-
-    // PRNG prng(ZeroBlock);
-    
-    // auto sockets = cp::LocalAsyncSocket::makePair();
-
-
-    // auto format = PprfOutputFormat::Plain;
-    // SilentSubfieldPprfSender<u128, u128> sender;
-    // sender.fromBlock = fromBlock;
-    // SilentSubfieldPprfReceiver<u128, u128> recver;
-    // recver.fromBlock = fromBlock;
-
-    // sender.configure(domain, numPoints);
-    // recver.configure(domain, numPoints);
-
-    // auto numOTs = sender.baseOtCount();
-    // std::cout << "numOTs " << numOTs << std::endl;
-    // std::vector<std::array<block, 2>> sendOTs(numOTs);
-    // std::vector<block> recvOTs(numOTs);
-    // BitVector recvBits = recver.sampleChoiceBits(domain, format, prng);
-
-    // prng.get(sendOTs.data(), sendOTs.size());
-    // for (u64 i = 0; i < numOTs; ++i)
-    // {
-    //     recvOTs[i] = sendOTs[i][recvBits[i]];
-    // }
-    // sender.setBase(sendOTs);
-    // recver.setBase(recvOTs);
-
-    // std::cout << "OK" << std::endl;
-
-    // Matrix<u128> sOut(domain, numPoints);
-    // Matrix<u128> rOut(domain, numPoints);
-    // std::vector<u64> points(numPoints);
-    // recver.getPoints(points, format);
-
-    // u128 ONE = 1;
-
-    // auto p0 = sender.expand(sockets[0], {&ONE,1}, prng, sOut, format, true, threads);
-    // auto p1 = recver.expand(sockets[1], prng, rOut, format, true, threads);
-
-    // eval(p0, p1);
-
-    // bool failed = false;
-
-
-    // for (u64 j = 0; j < numPoints; ++j)
-    // {
-
-    //     for (u64 i = 0; i < domain; ++i)
-    //     {
-
-    //         auto exp = sOut(i, j);
-    //         if (points[j] == i) {
-    //             std::cout << "points[" << j << "] == " << i << std::endl;
-    //             exp = exp + ONE;
-    //         }
-
-    //         if (exp != rOut(i, j))
-    //         {
-    //             failed = true;
-
-    //             if (cmd.isSet("v"))
-    //                 std::cout << Color::Red;
-    //         }
-    //         if (cmd.isSet("v"))
-    //             std::cout << "r[" << j << "][" << i << "] "  << u128ToString(exp) << " " << u128ToString(rOut(i, j)) << std::endl << Color::Default;
-    //     }
-    // }
-
-    // if (failed)
-    //     throw RTE_LOC;
-
-
-    /*
-     * Currently there is a weird issue
-     * out/build/linux/frontend/frontend_libOTe -u 82 passed
-     * but out/build/linux/frontend/frontend_libOTe -u has error
-     */
 
     u64 domain = cmd.getOr("d", 16);
     auto threads = cmd.getOr("t", 1);
@@ -1134,41 +988,6 @@ void Tools_Pprf_subfield_test(const CLP& cmd)
         throw RTE_LOC;
       }
     }
-
-//     u128 ONE = 1;
-//    auto p0 = sender.expand(sockets[0], { &ONE, 1 }, prng, sOut2, format, true, threads);
-//    auto p1 = recver.expand(sockets[1], prng, rOut2, format, true, threads);
-//
-//    eval(p0, p1);
-//    std::cout << "OK" << std::endl;
-////    std::sort(points.begin(), points.end());
-////    for (auto& p : points) {
-////      std::cout << p << std::endl;
-////    }
-//
-//    bool failed = false;
-//    for (u64 i = 0; i < sOut2.rows(); ++i)
-//    {
-//
-//        auto f = std::find(points.begin(), points.end(), i) != points.end();
-//
-//        auto exp = f ? sOut2(i) + ONE : sOut2(i);
-//
-//        if (rOut2(i) != exp)
-//        {
-//            failed = true;
-//
-//            if (cmd.getOr("v", 2) > 1) {
-//                std::cout << Color::Red;
-//            }
-//        }
-//        if (cmd.getOr("v", 2) > 1) {
-//            std::cout << i << " " << u128ToString(rOut2(i)) << " " << u128ToString(exp) << std::endl << Color::Default;
-//        }
-//    }
-//
-//    if (failed)
-//        throw RTE_LOC;
 
 #else
     throw UnitTestSkipped("ENABLE_SILENTOT not defined.");
