@@ -41,8 +41,8 @@ class NoisySubfieldVoleSender : public TimerAdapter {
   using G = typename TypeTrait::G;
   task<> send(F x, span<F> z, PRNG& prng,
                                OtReceiver& ot, Socket& chl) {
-    MC_BEGIN(task<>, this, x, z, &prng, &ot, &chl, bv = BitVector((u8*)&x, 128),
-             otMsg = AlignedUnVector<block>{128}); // todo: sizeof(F) * 8
+    MC_BEGIN(task<>, this, x, z, &prng, &ot, &chl, bv = BitVector((u8*)&x, sizeof(F) * 8),
+             otMsg = AlignedUnVector<block>{sizeof(F) * 8}); // todo: sizeof(F) * 8
 
     setTimePoint("NoisyVoleSender.ot.begin");
 

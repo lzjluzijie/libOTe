@@ -43,7 +43,7 @@ class NoisySubfieldVoleReceiver : public TimerAdapter {
   task<> receive(span<G> y, span<F> z, PRNG& prng,
                                     OtSender& ot, Socket& chl) {
     MC_BEGIN(task<>, this, y, z, &prng, &ot, &chl,
-             otMsg = AlignedUnVector<std::array<block, 2>>{128}); // todo: sizeof(F) * 8
+             otMsg = AlignedUnVector<std::array<block, 2>>{sizeof(F) * 8}); // todo: sizeof(F) * 8
 
     setTimePoint("NoisyVoleReceiver.ot.begin");
 
