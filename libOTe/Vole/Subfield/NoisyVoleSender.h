@@ -59,7 +59,7 @@ class NoisySubfieldVoleSender : public TimerAdapter {
     MC_BEGIN(task<>, this, x, z, &prng, otMsg, &chl, msg = Matrix<F>{},
              buffer = std::vector<block>{}, xb = BitVector{});
 
-//    if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
+    if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
     setTimePoint("NoisyVoleSender.main");
 
     msg.resize(otMsg.size(), z.size());

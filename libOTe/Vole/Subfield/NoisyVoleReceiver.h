@@ -64,7 +64,7 @@ class NoisySubfieldVoleReceiver : public TimerAdapter {
     );
 
     setTimePoint("NoisyVoleReceiver.begin");
-//    if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
+    if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
     if (y.size() != z.size()) throw RTE_LOC;
     if (z.size() == 0) throw RTE_LOC;
 

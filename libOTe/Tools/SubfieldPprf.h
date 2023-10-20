@@ -1417,7 +1417,7 @@ namespace osuCrypto
 
                         // The index of the child on the active path.
                         auto activeChildIdx = pprf.mPoints[j + treeIdx];
-                        lvl[activeChildIdx][j] = 0;
+                        lvl[activeChildIdx][j] = F{};
                     }
                 }
 
