@@ -103,10 +103,10 @@ namespace osuCrypto
 
         // use the default base OT class to generate the
         // IKNP base OTs that are required.
-        task<> genBaseOts(PRNG& prng, Socket& chl)
-        {
-            return mOtExtSender.genBaseOts(prng, chl);
-        }
+//        task<> genBaseOts(PRNG& prng, Socket& chl)
+//        {
+//            return mOtExtSender.genBaseOts(prng, chl);
+//        }
 
         /////////////////////////////////////////////////////
         // The native silent OT extension interface
@@ -182,10 +182,12 @@ namespace osuCrypto
                {
                  chl2 = chl.fork();
                  prng2.SetSeed(prng.get());
-                 MC_AWAIT(
-                     macoro::when_all_ready(
-                         nv.send(*delta, noiseDeltaShares, prng2, baseOt, chl2),
-                         baseOt.send(msg, prng, chl)));
+                 MC_AWAIT(baseOt.send(msg, prng, chl));
+                 MC_AWAIT(nv.send(*delta, noiseDeltaShares, prng2, baseOt, chl2));
+//                 MC_AWAIT(
+//                     macoro::when_all_ready(
+//                         nv.send(*delta, noiseDeltaShares, prng2, baseOt, chl2),
+//                         baseOt.send(msg, prng, chl)));
                }
 
 
@@ -357,6 +359,7 @@ namespace osuCrypto
                {
                  // first generate 128 normal base OTs
                  configure(n, SilentBaseType::BaseExtend);
+//                 configure(n, SilentBaseType::Base);
                }
 
                if (mRequestedNumOTs != n)

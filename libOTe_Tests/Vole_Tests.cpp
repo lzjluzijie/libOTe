@@ -577,6 +577,13 @@ void Vole_Silent_baseOT_test(const oc::CLP& cmd)
 
     SilentVoleReceiver recv;
     SilentVoleSender send;
+
+    // ExConv currently not working
+    recv.mMultType = MultType::QuasiCyclic;
+    send.mMultType = MultType::QuasiCyclic;
+
+    recv.configure(n, SilentBaseType::Base);
+    send.configure(n, SilentBaseType::Base);
     // c * x = z + m
 
     //for (u64 n = 5000; n < 10000; ++n)

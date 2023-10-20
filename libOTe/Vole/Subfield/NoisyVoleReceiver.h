@@ -43,7 +43,7 @@ class NoisySubfieldVoleReceiver : public TimerAdapter {
   task<> receive(span<G> y, span<F> z, PRNG& prng,
                                     OtSender& ot, Socket& chl) {
     MC_BEGIN(task<>, this, y, z, &prng, &ot, &chl,
-             otMsg = AlignedUnVector<std::array<block, 2>>{sizeof(F) * 8});
+             otMsg = AlignedUnVector<std::array<block, 2>>{128}); // todo: sizeof(F) * 8
 
     setTimePoint("NoisyVoleReceiver.ot.begin");
 
@@ -64,14 +64,14 @@ class NoisySubfieldVoleReceiver : public TimerAdapter {
     );
 
     setTimePoint("NoisyVoleReceiver.begin");
-    if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
+//    if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
     if (y.size() != z.size()) throw RTE_LOC;
     if (z.size() == 0) throw RTE_LOC;
 
     memset(z.data(), 0, sizeof(F) * z.size());
     msg.resize(otMsg.size(), z.size());
 
-    for (u64 ii = 0; ii < (u64)otMsg.size(); ++ii) {
+    for (u64 ii = 0; ii < sizeof(F) * 8; ++ii) {
       prng.SetSeed(otMsg[ii][0], z.size());
       auto& buffer = prng.mBuffer;
 

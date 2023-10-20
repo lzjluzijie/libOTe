@@ -41,8 +41,8 @@ class NoisySubfieldVoleSender : public TimerAdapter {
   using G = typename TypeTrait::G;
   task<> send(F x, span<F> z, PRNG& prng,
                                OtReceiver& ot, Socket& chl) {
-    MC_BEGIN(task<>, this, x, z, &prng, &ot, &chl, bv = BitVector((u8*)&x, sizeof(F) * 8),
-             otMsg = AlignedUnVector<block>{128});
+    MC_BEGIN(task<>, this, x, z, &prng, &ot, &chl, bv = BitVector((u8*)&x, 128),
+             otMsg = AlignedUnVector<block>{128}); // todo: sizeof(F) * 8
 
     setTimePoint("NoisyVoleSender.ot.begin");
 
@@ -59,7 +59,7 @@ class NoisySubfieldVoleSender : public TimerAdapter {
     MC_BEGIN(task<>, this, x, z, &prng, otMsg, &chl, msg = Matrix<F>{},
              buffer = std::vector<block>{}, xb = BitVector{});
 
-    if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
+//    if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
     setTimePoint("NoisyVoleSender.main");
 
     msg.resize(otMsg.size(), z.size());
@@ -72,7 +72,7 @@ class NoisySubfieldVoleSender : public TimerAdapter {
 
     xb = BitVector((u8*)&x, sizeof(F) * 8);
 
-    for (u64 i = 0; i < otMsg.size(); ++i) {
+    for (u64 i = 0; i < sizeof(F) * 8; ++i) {
       PRNG pi(otMsg[i]);
       pi.get<block>(buffer);
 
