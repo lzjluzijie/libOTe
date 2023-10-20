@@ -25,8 +25,8 @@ namespace osuCrypto
 
         if (Add)
         {
-            *y1 = *y1 ^ ee1[r];
-            *y2 = *y2 ^ ee2[r];
+            *y1 = *y1 + ee1[r];
+            *y2 = *y2 + ee2[r];
         }
         else
         {
@@ -129,22 +129,22 @@ namespace osuCrypto
             w2[7] = ee2[rr[7]];
 
             auto ww1 =
-                w1[0] ^
-                w1[1] ^
-                w1[2] ^
-                w1[3] ^
-                w1[4] ^
-                w1[5] ^
-                w1[6] ^
+                w1[0] +
+                w1[1] +
+                w1[2] +
+                w1[3] +
+                w1[4] +
+                w1[5] +
+                w1[6] +
                 w1[7];
             auto ww2 =
-                w2[0] ^
-                w2[1] ^
-                w2[2] ^
-                w2[3] ^
-                w2[4] ^
-                w2[5] ^
-                w2[6] ^
+                w2[0] +
+                w2[1] +
+                w2[2] +
+                w2[3] +
+                w2[4] +
+                w2[5] +
+                w2[6] +
                 w2[7];
 
             if constexpr (count > 8)
@@ -152,14 +152,14 @@ namespace osuCrypto
                 T yy1;
                 T2 yy2;
                 expandOne<T, T2, count - 8, false>(ee1, ee2, &yy1, &yy2, prng);
-                ww1 = ww1 ^ yy1;
-                ww2 = ww2 ^ yy2;
+                ww1 = ww1 + yy1;
+                ww2 = ww2 + yy2;
             }
 
             if constexpr (Add)
             {
-                *y1 = *y1 ^ ww1;
-                *y2 = *y2 ^ ww2;
+                *y1 = *y1 + ww1;
+                *y2 = *y2 + ww2;
             }
             else
             {
@@ -177,8 +177,8 @@ namespace osuCrypto
                 auto w1 = ee1[r];
                 auto w2 = ee2[r];
                 expandOne<T, T2, count - 1, true>(ee1, ee2, y1, y2, prng);
-                *y1 = *y1 ^ w1;
-                *y2 = *y2 ^ w2;
+                *y1 = *y1 + w1;
+                *y2 = *y2 + w2;
 
             }
             else
@@ -187,8 +187,8 @@ namespace osuCrypto
                 T yy1;
                 T2 yy2;
                 expandOne<T, T2, count - 1, false>(ee1, ee2, &yy1, &yy2, prng);
-                *y1 = ee1[r] ^ yy1;
-                *y2 = ee2[r] ^ yy2;
+                *y1 = ee1[r] + yy1;
+                *y2 = ee2[r] + yy2;
             }
         }
     }
@@ -336,13 +336,13 @@ namespace osuCrypto
                     for (auto j = 1ull; j < mExpanderWeight; ++j)
                     {
                         r = prng.get();
-                        wv1 = wv1 ^ ee1[r];
-                        wv2 = wv2 ^ ee2[r];
+                        wv1 = wv1 + ee1[r];
+                        wv2 = wv2 + ee2[r];
                     }
                     if constexpr (Add)
                     {
-                        ww1[i + jj] = ww1[i + jj] ^ wv1;
-                        ww2[i + jj] = ww2[i + jj] ^ wv2;
+                        ww1[i + jj] = ww1[i + jj] + wv1;
+                        ww2[i + jj] = ww2[i + jj] + wv2;
                     }
                     else
                     {
@@ -363,14 +363,14 @@ namespace osuCrypto
             for (auto j = 1ull; j < mExpanderWeight; ++j)
             {
                 r = prng.get();
-                wv1 = wv1 ^ ee1[r];
-                wv2 = wv2 ^ ee2[r];
+                wv1 = wv1 + ee1[r];
+                wv2 = wv2 + ee2[r];
 
             }
             if constexpr (Add)
             {
-                ww1[i] = ww1[i] ^ wv1;
-                ww2[i] = ww2[i] ^ wv2;
+                ww1[i] = ww1[i] + wv1;
+                ww2[i] = ww2[i] + wv2;
             }
             else
             {

@@ -332,8 +332,7 @@ void ExConvCode_encode_u128_test(const oc::CLP& cmd)
 //        z1.resize(2*n);
 
         code.dualEncode<u128>(z1);
-        code.dualEncode<u128>(z0);
-        code.dualEncode<u128>(y);
+        code.dualEncode2<u128, u128>(z0, y);
 
         for (u64 i = 0; i < n; ++i)
         {
