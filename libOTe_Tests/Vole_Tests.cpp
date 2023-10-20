@@ -105,7 +105,7 @@ struct TypeTrait128
     c.m = b;
     return c.u;
   }
-  static inline F powerOf2(u64 power) {
+  static inline F pow(u64 power) {
     u128 ret = 1;
     ret <<= power;
     return ret;
@@ -127,19 +127,67 @@ struct TypeTrait64
     c.m = b;
     return c.u;
   }
-  static inline F powerOf2(u64 power) {
+  static inline F pow(u64 power) {
     u64 ret = 1;
     ret <<= power;
     return ret;
   }
 };
 
-struct F128: block {
-  F128() : block(){
-
+template<typename T, size_t N>
+struct Vec {
+  std::array<T, N> v;
+  inline Vec operator+(const Vec& rhs) const {
+    Vec ret;
+    for (u64 i = 0; i < N; ++i) {
+      ret.v[i] = v[i] + rhs.v[i];
+    }
+    return ret;
   }
-  inline F128 operator+(const F128& rhs) const {
-    return {};
+
+    inline Vec operator-(const Vec& rhs) const {
+        Vec ret;
+        for (u64 i = 0; i < N; ++i) {
+        ret.v[i] = v[i] - rhs.v[i];
+        }
+        return ret;
+    }
+
+  inline Vec operator*(const T& rhs) const {
+      Vec ret;
+      for (u64 i = 0; i < N; ++i) {
+        ret.v[i] = v[i] * rhs;
+      }
+      return ret;
+  }
+
+  inline T operator[](u64 idx) const {
+    return v[idx];
+  }
+};
+
+struct TypeTraitVec
+{
+  static constexpr u64 N = 4;
+  using F = Vec<u32, N>;
+  using G = u32;
+
+  union conv {
+    F u;
+    block m;
+  };
+
+  static inline F fromBlock(const block& b) {
+    conv c{};
+    c.m = b;
+    return c.u;
+  }
+  static inline F pow(u64 power) {
+    F ret;
+    for (u64 i = 0; i < N; ++i) {
+      ret.v[i] = 1 << power;
+    }
+    return ret;
   }
 };
 
@@ -230,7 +278,57 @@ void Vole_Subfield_test(const oc::CLP& cmd)
     {
       if (x * y[i] != (z1[i] - z0[i]))
       {
-//        throw RTE_LOC;
+        throw RTE_LOC;
+      }
+    }
+    timer.setTimePoint("done");
+
+    //std::cout << timer << std::endl;
+  }
+
+  {
+    Timer timer;
+    timer.setTimePoint("start");
+    u64 n = cmd.getOr("n", 123);
+    block seed = block(0, cmd.getOr("seed", 0));
+    PRNG prng(seed);
+
+    using F = TypeTraitVec::F;
+
+    F x = TypeTraitVec::fromBlock(prng.get<block>());
+    std::vector<u32> y(n);
+    std::vector<F> z0(n), z1(n);
+    prng.get(y.data(), y.size());
+
+    NoisySubfieldVoleReceiver<TypeTraitVec> recv;
+    NoisySubfieldVoleSender<TypeTraitVec> send;
+
+    recv.setTimer(timer);
+    send.setTimer(timer);
+
+    auto chls = cp::LocalAsyncSocket::makePair();
+    timer.setTimePoint("net");
+
+    BitVector recvChoice((u8*)&x, 64);
+    std::vector<block> otRecvMsg(64);
+    std::vector<std::array<block, 2>> otSendMsg(64);
+    prng.get<std::array<block, 2>>(otSendMsg);
+    for (u64 i = 0; i < 64; ++i)
+      otRecvMsg[i] = otSendMsg[i][recvChoice[i]];
+    timer.setTimePoint("ot");
+
+    auto p0 = recv.receive(y, z0, prng, otSendMsg, chls[0]);
+    auto p1 = send.send(x, z1, prng, otRecvMsg, chls[1]);
+
+    eval(p0, p1);
+
+    for (u64 i = 0; i < n; ++i)
+    {
+      for (u64 j = 0; j < 4; j++) {
+        if (x[j] * y[i] != (z1[i][j] - z0[i][j]))
+        {
+          throw RTE_LOC;
+        }
       }
     }
     timer.setTimePoint("done");

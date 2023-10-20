@@ -79,11 +79,7 @@ class NoisySubfieldVoleReceiver : public TimerAdapter {
         auto bufj = TypeTrait::fromBlock(buffer[j]);
         z[j] = z[j] + bufj;
 
-        // todo
-        F twoPowI = 0;
-        *BitIterator((u8*)&twoPowI, ii) = 1;
-
-        F yy = y[j] * twoPowI;
+        F yy = TypeTrait::pow(ii) * y[j];
 
         msg(ii, j) = yy + bufj;
       }
