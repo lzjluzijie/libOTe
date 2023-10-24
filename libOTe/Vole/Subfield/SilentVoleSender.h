@@ -358,8 +358,8 @@ namespace osuCrypto
                if (isConfigured() == false)
                {
                  // first generate 128 normal base OTs
-//                 configure(n, SilentBaseType::BaseExtend);
-                 configure(n, SilentBaseType::Base);
+                 configure(n, SilentBaseType::BaseExtend);
+//                 configure(n, SilentBaseType::Base);
                }
 
                if (mRequestedNumOTs != n)
