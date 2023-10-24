@@ -318,7 +318,7 @@ namespace osuCrypto
         // send(...) interface for the normal behavior.
         task<> silentSend(
             F delta,
-            span<G> b,
+            span<F> b,
             PRNG& prng,
             Socket& chl)
         {
@@ -326,7 +326,7 @@ namespace osuCrypto
 
           MC_AWAIT(silentSendInplace(delta, b.size(), prng, chl));
 
-          std::memcpy(b.data(), mB.data(), b.size() * sizeof(G));
+          std::memcpy(b.data(), mB.data(), b.size() * sizeof(F));
           clear();
 
           setTimePoint("SilentVoleSender.expand.ldpc.msgCpy");

@@ -1,6 +1,7 @@
 
 #define EXCONVCODE_INSTANTIATIONS
 #include "ExConvCode.cpp"
+#include "libOTe/Vole/Subfield/Subfield.h"
 
 using u128 = __uint128_t;
 
@@ -30,4 +31,8 @@ namespace osuCrypto
     template void ExConvCode::dualEncode<u64>(span<u64> e, span<u64> w);
     template void ExConvCode::dualEncode2<u64, u64>(span<u64>, span<u64> e);
     template void ExConvCode::accumulate<u64, u64>(span<u64>, span<u64> e);
+
+    template void ExConvCode::dualEncode2<TypeTraitVec::F, TypeTraitVec::G>(span<TypeTraitVec::F>, span<TypeTraitVec::G> e);
+    template void ExConvCode::dualEncode<TypeTraitVec::F>(span<TypeTraitVec::F> e);
+    template void ExConvCode::accumulate<TypeTraitVec::F, TypeTraitVec::G>(span<TypeTraitVec::F>, span<TypeTraitVec::G> e);
 }

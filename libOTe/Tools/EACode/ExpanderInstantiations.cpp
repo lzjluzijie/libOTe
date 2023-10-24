@@ -1,5 +1,6 @@
 #define EXPANDER_INSTANTATIONS
 #include "Expander.cpp"
+#include "libOTe/Vole/Subfield/Subfield.h"
 
 namespace osuCrypto
 {
@@ -50,4 +51,13 @@ namespace osuCrypto
     template void ExpanderCode::expand<u8, u8, true>(
         span<const u8> e, span<const u8> e2,
         span<u8> w, span<u8> w2) const;
+
+    template void ExpanderCode::expand<TypeTraitVec::F, true>(
+        span<const TypeTraitVec::F> e, span<TypeTraitVec::F> w) const;
+    template void ExpanderCode::expand<TypeTraitVec::F, false>(
+        span<const TypeTraitVec::F> e, span<TypeTraitVec::F> w) const;
+    template void ExpanderCode::expand<TypeTraitVec::F, TypeTraitVec::G, true>(
+        span<const TypeTraitVec::F> e, span<const TypeTraitVec::G> e2,
+        span<TypeTraitVec::F> w, span<TypeTraitVec::G> w2) const;
+
 }

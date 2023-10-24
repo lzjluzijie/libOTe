@@ -421,11 +421,58 @@ void Vole_Silent_Subfield_test(const oc::CLP& cmd) {
       u64 right = z0[i] - z1[i];
       if (left != right) {
         std::cout << "bad " << i << "\n  c[i] " << c[i] << " * x " << x << " = " << left << std::endl;
-        std::cout << "z0[i] " << z0[i] << " ^ z1 " << z1[i] << " = " << right << std::endl;
+        std::cout << "z0[i] " << z0[i] << " - z1 " << z1[i] << " = " << right << std::endl;
         throw RTE_LOC;
       }
     }
   }
+
+  {
+    PRNG prng(seed);
+    using F = TypeTraitVec::F;
+    F x = TypeTraitVec::fromBlock(prng.get<block>());
+    std::vector<u32> c(n);
+    std::vector<F> z0(n), z1(n);
+
+    SilentSubfieldVoleReceiver<TypeTraitVec> recv;
+    SilentSubfieldVoleSender<TypeTraitVec> send;
+
+    recv.mMultType = MultType::ExConv7x24;
+    send.mMultType = MultType::ExConv7x24;
+
+    recv.setTimer(timer);
+    send.setTimer(timer);
+
+    recv.mDebug = true;
+    send.mDebug = true;
+
+    auto chls = cp::LocalAsyncSocket::makePair();
+
+    timer.setTimePoint("net");
+
+    timer.setTimePoint("ot");
+//  fakeBase(n, nt, prng, x, recv, send);
+
+    // c * x = z + m
+
+    auto p0 = recv.silentReceive(span<u32>(c), span<F>(z0), prng, chls[0]);
+    auto p1 = send.silentSend(x, span<F>(z1), prng, chls[1]);
+
+    eval(p0, p1);
+    timer.setTimePoint("send");
+    for (u64 i = 0; i < n; i++) {
+      for (u64 j = 0; j < 4; j++) {
+        u64 left = c[i] * x[j];
+        u64 right = z0[i][j] - z1[i][j];
+        if (left != right) {
+          std::cout << "bad " << i << "\n  c[i] " << c[i] << " * x[j] " << x[j] << " = " << left << std::endl;
+          std::cout << "z0[i][j] " << z0[i][j] << " - z1 " << z1[i][j] << " = " << right << std::endl;
+          throw RTE_LOC;
+        }
+      }
+    }
+  }
+
   timer.setTimePoint("done");
 #else
   throw UnitTestSkipped("not defined." LOCATION);
