@@ -173,55 +173,55 @@ void Vole_Subfield_test(const oc::CLP& cmd)
     //std::cout << timer << std::endl;
   }
 
-//  {
-//    Timer timer;
-//    timer.setTimePoint("start");
-//    u64 n = cmd.getOr("n", 123);
-//    block seed = block(0, cmd.getOr("seed", 0));
-//    PRNG prng(seed);
-//
-//    using F = TypeTraitVec::F;
-//
-//    F x = TypeTraitVec::fromBlock(prng.get<block>());
-//    std::vector<u32> y(n);
-//    std::vector<F> z0(n), z1(n);
-//    prng.get(y.data(), y.size());
-//
-//    NoisySubfieldVoleReceiver<TypeTraitVec> recv;
-//    NoisySubfieldVoleSender<TypeTraitVec> send;
-//
-//    recv.setTimer(timer);
-//    send.setTimer(timer);
-//
-//    auto chls = cp::LocalAsyncSocket::makePair();
-//    timer.setTimePoint("net");
-//
-//    BitVector recvChoice((u8*)&x, 128);
-//    std::vector<block> otRecvMsg(128);
-//    std::vector<std::array<block, 2>> otSendMsg(128);
-//    prng.get<std::array<block, 2>>(otSendMsg);
-//    for (u64 i = 0; i < 128; ++i)
-//      otRecvMsg[i] = otSendMsg[i][recvChoice[i]];
-//    timer.setTimePoint("ot");
-//
-//    auto p0 = recv.receive(y, z0, prng, otSendMsg, chls[0]);
-//    auto p1 = send.send(x, z1, prng, otRecvMsg, chls[1]);
-//
-//    eval(p0, p1);
-//
-//    for (u64 i = 0; i < n; ++i)
-//    {
-//      for (u64 j = 0; j < 4; j++) {
-//        if (x[j] * y[i] != (z1[i][j] - z0[i][j]))
-//        {
-//          throw RTE_LOC;
-//        }
-//      }
-//    }
-//    timer.setTimePoint("done");
-//
-//    //std::cout << timer << std::endl;
-//  }
+  {
+    Timer timer;
+    timer.setTimePoint("start");
+    u64 n = cmd.getOr("n", 123);
+    block seed = block(0, cmd.getOr("seed", 0));
+    PRNG prng(seed);
+
+    using F = TypeTraitVec::F;
+
+    F x = TypeTraitVec::fromBlock(prng.get<block>());
+    std::vector<u32> y(n, 1);
+    std::vector<F> z0(n), z1(n);
+    prng.get(y.data(), y.size());
+
+    NoisySubfieldVoleReceiver<TypeTraitVec> recv;
+    NoisySubfieldVoleSender<TypeTraitVec> send;
+
+    recv.setTimer(timer);
+    send.setTimer(timer);
+
+    auto chls = cp::LocalAsyncSocket::makePair();
+    timer.setTimePoint("net");
+
+    BitVector recvChoice((u8*)&x, 128);
+    std::vector<block> otRecvMsg(128);
+    std::vector<std::array<block, 2>> otSendMsg(128);
+    prng.get<std::array<block, 2>>(otSendMsg);
+    for (u64 i = 0; i < 128; ++i)
+      otRecvMsg[i] = otSendMsg[i][recvChoice[i]];
+    timer.setTimePoint("ot");
+
+    auto p0 = recv.receive(y, z0, prng, otSendMsg, chls[0]);
+    auto p1 = send.send(x, z1, prng, otRecvMsg, chls[1]);
+
+    eval(p0, p1);
+
+    for (u64 i = 0; i < n; ++i)
+    {
+      for (u64 j = 0; j < 4; j++) {
+        if (x[j] * y[i] != (z1[i][j] - z0[i][j]))
+        {
+          throw RTE_LOC;
+        }
+      }
+    }
+    timer.setTimePoint("done");
+
+    //std::cout << timer << std::endl;
+  }
 }
 
 #else 

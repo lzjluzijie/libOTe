@@ -121,10 +121,9 @@ struct TypeTraitVec {
     return c.u;
   }
   static inline F pow(u64 power) {
-    F ret;
-    for (u64 i = 0; i < N; ++i) {
-      ret.v[i] = 1 << power;
-    }
+    F ret{};
+    power = power % 128;
+    ret[power/ 32] = 1 << (power % 32);
     return ret;
   }
 };

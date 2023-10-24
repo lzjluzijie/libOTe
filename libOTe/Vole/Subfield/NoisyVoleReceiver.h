@@ -74,12 +74,11 @@ class NoisySubfieldVoleReceiver : public TimerAdapter {
     for (u64 ii = 0; ii < sizeof(F) * 8; ++ii) {
       prng.SetSeed(otMsg[ii][0], z.size());
       auto& buffer = prng.mBuffer;
-
+      auto pow = TypeTrait::pow(ii);
       for (u64 j = 0; j < (u64)y.size(); ++j) {
         auto bufj = TypeTrait::fromBlock(buffer[j]);
         z[j] = z[j] + bufj;
-
-        F yy = TypeTrait::pow(ii) * y[j];
+        F yy = pow * y[j];
 
         msg(ii, j) = yy + bufj;
       }
