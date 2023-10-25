@@ -180,15 +180,16 @@ void Vole_Subfield_test(const oc::CLP& cmd)
     block seed = block(0, cmd.getOr("seed", 0));
     PRNG prng(seed);
 
-    using F = TypeTraitVec::F;
+    using TypeTrait = TypeTraitVec<u32, 1000>;
+    using F = TypeTrait::F;
 
-    F x = TypeTraitVec::fromBlock(prng.get<block>());
+    F x = TypeTrait::fromBlock(prng.get<block>());
     std::vector<u32> y(n, 1);
     std::vector<F> z0(n), z1(n);
     prng.get(y.data(), y.size());
 
-    NoisySubfieldVoleReceiver<TypeTraitVec> recv;
-    NoisySubfieldVoleSender<TypeTraitVec> send;
+    NoisySubfieldVoleReceiver<TypeTrait> recv;
+    NoisySubfieldVoleSender<TypeTrait> send;
 
     recv.setTimer(timer);
     send.setTimer(timer);
@@ -429,13 +430,14 @@ void Vole_Silent_Subfield_test(const oc::CLP& cmd) {
 
   {
     PRNG prng(seed);
-    using F = TypeTraitVec::F;
-    F x = TypeTraitVec::fromBlock(prng.get<block>());
+    using TypeTrait = TypeTraitVec<u32, 50>;
+    using F = TypeTrait::F;
+    F x = TypeTrait::fromBlock(prng.get<block>());
     std::vector<u32> c(n);
     std::vector<F> z0(n), z1(n);
 
-    SilentSubfieldVoleReceiver<TypeTraitVec> recv;
-    SilentSubfieldVoleSender<TypeTraitVec> send;
+    SilentSubfieldVoleReceiver<TypeTrait> recv;
+    SilentSubfieldVoleSender<TypeTrait> send;
 
     recv.mMultType = MultType::ExConv7x24;
     send.mMultType = MultType::ExConv7x24;

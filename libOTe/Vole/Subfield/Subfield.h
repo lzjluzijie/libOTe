@@ -58,6 +58,7 @@ struct TypeTrait64 {
   }
 };
 
+// array
 template<typename T, size_t N>
 struct Vec {
   std::array<T, N> v;
@@ -105,25 +106,24 @@ struct Vec {
   }
 };
 
+// TypeTraitVec for array of integers
+template<typename T, size_t N>
 struct TypeTraitVec {
-  static constexpr u64 N = 4;
-  using F = Vec<u32, N>;
-  using G = u32;
-
-  union conv {
-    F u;
-    block m;
-  };
+  using F = Vec<T, N>;
+  using G = T;
+//  static constexpr size_t GSIZE = sizeof(T) * 8;
+//  static constexpr size_t FSIZE = N * GSIZE;
 
   static inline F fromBlock(const block &b) {
-    conv c{};
-    c.m = b;
-    return c.u;
+    PRNG prng(b, N * sizeof(T));
+    F ret;
+    memcpy(ret.v.data(), prng.mBuffer.data(), N * sizeof(T));
+    return ret;
   }
   static inline F pow(u64 power) {
     F ret{};
-    power = power % 128;
-    ret[power/ 32] = 1 << (power % 32);
+    power = power % (N * sizeof(T) * 8);
+    ret[power / (sizeof(T) * 8)] = 1 << (power % (sizeof(T) * 8));
     return ret;
   }
 };
