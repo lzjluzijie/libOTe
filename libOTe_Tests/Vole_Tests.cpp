@@ -180,7 +180,8 @@ void Vole_Subfield_test(const oc::CLP& cmd)
     block seed = block(0, cmd.getOr("seed", 0));
     PRNG prng(seed);
 
-    using TypeTrait = TypeTraitVec<u32, 1000>;
+    constexpr size_t N = 10;
+    using TypeTrait = TypeTraitVec<u32, N>;
     using F = TypeTrait::F;
 
     F x = TypeTrait::fromBlock(prng.get<block>());
@@ -197,11 +198,11 @@ void Vole_Subfield_test(const oc::CLP& cmd)
     auto chls = cp::LocalAsyncSocket::makePair();
     timer.setTimePoint("net");
 
-    BitVector recvChoice((u8*)&x, 128);
-    std::vector<block> otRecvMsg(128);
-    std::vector<std::array<block, 2>> otSendMsg(128);
+    BitVector recvChoice((u8*)&x, N * 32);
+    std::vector<block> otRecvMsg(N * 32);
+    std::vector<std::array<block, 2>> otSendMsg(N * 32);
     prng.get<std::array<block, 2>>(otSendMsg);
-    for (u64 i = 0; i < 128; ++i)
+    for (u64 i = 0; i < N * 32; ++i)
       otRecvMsg[i] = otSendMsg[i][recvChoice[i]];
     timer.setTimePoint("ot");
 
@@ -209,6 +210,8 @@ void Vole_Subfield_test(const oc::CLP& cmd)
     auto p1 = send.send(x, z1, prng, otRecvMsg, chls[1]);
 
     eval(p0, p1);
+    std::cout << "transferred " << (chls[0].bytesSent() + chls[0].bytesReceived()) << std::endl;
+    timer.setTimePoint("verify");
 
     for (u64 i = 0; i < n; ++i)
     {
@@ -221,7 +224,7 @@ void Vole_Subfield_test(const oc::CLP& cmd)
     }
     timer.setTimePoint("done");
 
-    //std::cout << timer << std::endl;
+    std::cout << timer << std::endl;
   }
 }
 
@@ -430,10 +433,11 @@ void Vole_Silent_Subfield_test(const oc::CLP& cmd) {
 
   {
     PRNG prng(seed);
-    using TypeTrait = TypeTraitVec<u32, 50>;
+    using TypeTrait = TypeTraitVec<u32, 10>;
     using F = TypeTrait::F;
+    using G = TypeTrait::G;
     F x = TypeTrait::fromBlock(prng.get<block>());
-    std::vector<u32> c(n);
+    std::vector<G> c(n);
     std::vector<F> z0(n), z1(n);
 
     SilentSubfieldVoleReceiver<TypeTrait> recv;
@@ -445,8 +449,8 @@ void Vole_Silent_Subfield_test(const oc::CLP& cmd) {
     recv.setTimer(timer);
     send.setTimer(timer);
 
-    recv.mDebug = true;
-    send.mDebug = true;
+//    recv.mDebug = true;
+//    send.mDebug = true;
 
     auto chls = cp::LocalAsyncSocket::makePair();
 
@@ -455,12 +459,13 @@ void Vole_Silent_Subfield_test(const oc::CLP& cmd) {
     timer.setTimePoint("ot");
 //  fakeBase(n, nt, prng, x, recv, send);
 
-    // c * x = z + m
-
-    auto p0 = recv.silentReceive(span<u32>(c), span<F>(z0), prng, chls[0]);
+    auto p0 = recv.silentReceive(span<G>(c), span<F>(z0), prng, chls[0]);
     auto p1 = send.silentSend(x, span<F>(z1), prng, chls[1]);
 
     eval(p0, p1);
+    std::cout << "transferred " << (chls[0].bytesSent() + chls[0].bytesReceived()) << std::endl;
+    timer.setTimePoint("verify");
+
     timer.setTimePoint("send");
     for (u64 i = 0; i < n; i++) {
       for (u64 j = 0; j < 4; j++) {
@@ -476,6 +481,7 @@ void Vole_Silent_Subfield_test(const oc::CLP& cmd) {
   }
 
   timer.setTimePoint("done");
+  std::cout << timer << std::endl;
 #else
   throw UnitTestSkipped("not defined." LOCATION);
 #endif

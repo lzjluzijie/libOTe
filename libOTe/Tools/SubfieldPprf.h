@@ -136,7 +136,6 @@ namespace osuCrypto
         }
         else if (oFormat == PprfOutputFormat::Interleaved)
         {
-            std::cout << "no op" << std::endl;
             // no op
         }
         else if (oFormat == PprfOutputFormat::Callback)
@@ -1390,9 +1389,6 @@ namespace osuCrypto
                         inactiveChild = ot0 - inactiveSum;
                         activeChild = ot1 - activeSum;
 
-                        std::cout << "output size: " << output.size() << std::endl;
-                        std::cout << inactiveChildIdx << " " << activeChildIdx << std::endl;
-
     #ifdef DEBUG_PRINT_PPRF
                         auto fLevel1 = getLevel(d + 1, true);
                         if (neq(fLevel1[inactiveChildIdx][j], inactiveChild))
@@ -1422,7 +1418,6 @@ namespace osuCrypto
                 }
 
                 // s is a checksum that is used for malicious security.
-                std::cout << "receiver copyOut" << std::endl;
                 copyOut<F>(lvl, output, pprf.mPntCount, treeIdx, oFormat, pprf.mOutputFn);
 
                 // pprf.setTimePoint("SilentMultiPprfReceiver.copy " + std::to_string(treeIdx));
