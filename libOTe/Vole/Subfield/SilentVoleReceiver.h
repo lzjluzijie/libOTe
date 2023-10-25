@@ -102,7 +102,7 @@ namespace osuCrypto
 
         u64 mNumThreads = 1;
 
-        bool mDebug = true; // todo
+        bool mDebug = false;
 
         BitVector mIknpSendBaseChoice, mGapBaseChoice;
 
@@ -495,11 +495,7 @@ namespace osuCrypto
           MC_BEGIN(task<>, this, n, &prng, &chl,
                    gapVals = std::vector<F>{},
                    myHash = std::array<u8, 32>{},
-                   theirHash = std::array<u8, 32>{},
-                   // todo
-                   tmpshare=    std::vector<F>{},
-                   mbb =    std::vector<F>{}
-
+                   theirHash = std::array<u8, 32>{}
           );
                gTimer.setTimePoint("SilentVoleReceiver.ot.enter");
 
@@ -563,19 +559,6 @@ namespace osuCrypto
                  mGen.setTimer(*mTimer);
                // expand the seeds into mA
                MC_AWAIT(mGen.expand(chl, prng, mA.subspan(0, mNumPartitions * mSizePer), PprfOutputFormat::Interleaved, true, mNumThreads));
-
-               tmpshare.resize(mNumPartitions);
-               mbb.resize(mNumPartitions * mSizePer);
-               MC_AWAIT(chl.recv(tmpshare));
-               MC_AWAIT(chl.recv(mbb));
-
-               for (u64 i = 0; i < mNumPartitions; i++) {
-                 u64 point = mS[i];
-                 auto exp = mbb[point] + tmpshare[i];
-                 if (exp != mA[point]) {
-                   throw RTE_LOC;
-                 }
-               }
 
                setTimePoint("SilentVoleReceiver.expand.pprf_transpose");
 

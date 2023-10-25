@@ -413,9 +413,6 @@ namespace osuCrypto
                MC_AWAIT(mGen.expand(chl, noiseShares, prng, mbb,
                                     PprfOutputFormat::Interleaved, true, mNumThreads));
 
-               MC_AWAIT(chl.send(noiseShares));
-               MC_AWAIT(chl.send(mbb));
-
                setTimePoint("SilentVoleSender.expand.pprf_transpose");
                if (mDebug)
                {
@@ -492,7 +489,7 @@ namespace osuCrypto
           MC_END();
         }
 
-        bool mDebug = true; // todo
+        bool mDebug = false;
 
         task<> checkRT(Socket& chl, F delta) const
         {
