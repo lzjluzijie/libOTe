@@ -144,9 +144,9 @@ struct TypeTraitVec {
   using F = Vec<T, N>;
   using G = T;
   static constexpr size_t bitsG = sizeof(T) * 8;
-  static constexpr size_t bitsF = N * bitsG;
-  static constexpr size_t bytesF = N * sizeof(T);
-  static constexpr size_t sizeBlocks = (N * sizeof(T) + sizeof(block) - 1) / sizeof(block);
+  static constexpr size_t bitsF = sizeof(F) * 8;
+  static constexpr size_t bytesF = sizeof(F);
+  static constexpr size_t sizeBlocks = (bytesF + sizeof(block) - 1) / sizeof(block);
   union Buf {
     F f;
     block b[sizeBlocks];

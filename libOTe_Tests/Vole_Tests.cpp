@@ -7,6 +7,8 @@
 #include "libOTe/Vole/Subfield/NoisyVoleReceiver.h"
 #include "libOTe/Vole/Subfield/SilentVoleSender.h"
 #include "libOTe/Vole/Subfield/SilentVoleReceiver.h"
+#include "libOTe/TwoChooseOne/Iknp/IknpOtExtSender.h"
+#include "libOTe/TwoChooseOne/Iknp/IknpOtExtReceiver.h"
 #include "cryptoTools/Network/Session.h"
 #include "cryptoTools/Network/IOService.h"
 #include "cryptoTools/Common/BitVector.h"
@@ -176,16 +178,18 @@ void Vole_Subfield_test(const oc::CLP& cmd)
   {
     Timer timer;
     timer.setTimePoint("start");
-    u64 n = cmd.getOr("n", 123);
+    u64 n = cmd.getOr("n", 400);
     block seed = block(0, cmd.getOr("seed", 0));
     PRNG prng(seed);
 
     constexpr size_t N = 10;
     using TypeTrait = TypeTraitVec<u32, N>;
+    u64 bitsF = TypeTrait::bitsF;
     using F = TypeTrait::F;
+    using G = TypeTrait::G;
 
     F x = TypeTrait::fromBlock(prng.get<block>());
-    std::vector<u32> y(n, 1);
+    std::vector<G> y(n);
     std::vector<F> z0(n), z1(n);
     prng.get(y.data(), y.size());
 
@@ -198,11 +202,11 @@ void Vole_Subfield_test(const oc::CLP& cmd)
     auto chls = cp::LocalAsyncSocket::makePair();
     timer.setTimePoint("net");
 
-    BitVector recvChoice((u8*)&x, N * 32);
-    std::vector<block> otRecvMsg(N * 32);
-    std::vector<std::array<block, 2>> otSendMsg(N * 32);
+    BitVector recvChoice((u8*)&x, bitsF);
+    std::vector<block> otRecvMsg(bitsF);
+    std::vector<std::array<block, 2>> otSendMsg(bitsF);
     prng.get<std::array<block, 2>>(otSendMsg);
-    for (u64 i = 0; i < N * 32; ++i)
+    for (u64 i = 0; i < bitsF; ++i)
       otRecvMsg[i] = otSendMsg[i][recvChoice[i]];
     timer.setTimePoint("ot");
 
@@ -215,8 +219,10 @@ void Vole_Subfield_test(const oc::CLP& cmd)
 
     for (u64 i = 0; i < n; ++i)
     {
-      for (u64 j = 0; j < 4; j++) {
-        if (x[j] * y[i] != (z1[i][j] - z0[i][j]))
+      for (u64 j = 0; j < N; j++) {
+        G left = x[j] * y[i];
+        G right = z1[i][j] - z0[i][j];
+        if (left != right)
         {
           throw RTE_LOC;
         }
@@ -369,16 +375,14 @@ void Vole_Silent_Subfield_test(const oc::CLP& cmd) {
     timer.setTimePoint("ot");
 //  fakeBase(n, nt, prng, x, recv, send);
 
-    // c * x = z + m
-
-    auto p0 = recv.silentReceive(span<u128>(c), span<u128>(z0), prng, chls[0]);
-    auto p1 = send.silentSend(x, span<u128>(z1), prng, chls[1]);
+    auto p0 = send.silentSend(x, span<u128>(z0), prng, chls[0]);
+    auto p1 = recv.silentReceive(span<u128>(c), span<u128>(z1), prng, chls[1]);
 
     eval(p0, p1);
     timer.setTimePoint("send");
     for (u64 i = 0; i < n; ++i) {
       u128 left = c[i] * x;
-      u128 right = z0[i] - z1[i];
+      u128 right = z1[i] - z0[i];
       if (left != right) {
         std::cout << "bad " << i << "\n  c[i] " << u128ToString(c[i]) << " * x " << u128ToString(x) << " = "
                   << u128ToString(left) << std::endl;
@@ -413,16 +417,14 @@ void Vole_Silent_Subfield_test(const oc::CLP& cmd) {
     timer.setTimePoint("ot");
 //  fakeBase(n, nt, prng, x, recv, send);
 
-    // c * x = z + m
-
-    auto p0 = recv.silentReceive(span<u64>(c), span<u64>(z0), prng, chls[0]);
-    auto p1 = send.silentSend(x, span<u64>(z1), prng, chls[1]);
+    auto p0 = send.silentSend(x, span<u64>(z0), prng, chls[0]);
+    auto p1 = recv.silentReceive(span<u64>(c), span<u64>(z1), prng, chls[1]);
 
     eval(p0, p1);
     timer.setTimePoint("send");
     for (u64 i = 0; i < n; ++i) {
       u64 left = c[i] * x;
-      u64 right = z0[i] - z1[i];
+      u64 right = z1[i] - z0[i];
       if (left != right) {
         std::cout << "bad " << i << "\n  c[i] " << c[i] << " * x " << x << " = " << left << std::endl;
         std::cout << "z0[i] " << z0[i] << " - z1 " << z1[i] << " = " << right << std::endl;
@@ -433,7 +435,8 @@ void Vole_Silent_Subfield_test(const oc::CLP& cmd) {
 
   {
     PRNG prng(seed);
-    using TypeTrait = TypeTraitVec<u32, 10>;
+    constexpr size_t N = 10;
+    using TypeTrait = TypeTraitVec<u32, N>;
     using F = TypeTrait::F;
     using G = TypeTrait::G;
     F x = TypeTrait::fromBlock(prng.get<block>());
@@ -459,8 +462,8 @@ void Vole_Silent_Subfield_test(const oc::CLP& cmd) {
     timer.setTimePoint("ot");
 //  fakeBase(n, nt, prng, x, recv, send);
 
-    auto p0 = recv.silentReceive(span<G>(c), span<F>(z0), prng, chls[0]);
-    auto p1 = send.silentSend(x, span<F>(z1), prng, chls[1]);
+    auto p0 = send.silentSend(x, span<F>(z0), prng, chls[0]);
+    auto p1 = recv.silentReceive(span<G>(c), span<F>(z1), prng, chls[1]);
 
     eval(p0, p1);
     std::cout << "transferred " << (chls[0].bytesSent() + chls[0].bytesReceived()) << std::endl;
@@ -468,9 +471,9 @@ void Vole_Silent_Subfield_test(const oc::CLP& cmd) {
 
     timer.setTimePoint("send");
     for (u64 i = 0; i < n; i++) {
-      for (u64 j = 0; j < 4; j++) {
-        u64 left = c[i] * x[j];
-        u64 right = z0[i][j] - z1[i][j];
+      for (u64 j = 0; j < N; j++) {
+        G left = c[i] * x[j];
+        G right = z1[i][j] - z0[i][j];
         if (left != right) {
           std::cout << "bad " << i << "\n  c[i] " << c[i] << " * x[j] " << x[j] << " = " << left << std::endl;
           std::cout << "z0[i][j] " << z0[i][j] << " - z1 " << z1[i][j] << " = " << right << std::endl;

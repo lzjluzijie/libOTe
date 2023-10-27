@@ -54,10 +54,10 @@ class NoisySubfieldVoleSender : public TimerAdapter {
     MC_END();
   }
 
-  task<> send(F x, span<F> z, PRNG& prng,
+  task<> send(F x, span<F> z, PRNG& _,
                                span<block> otMsg, Socket& chl) {
-    MC_BEGIN(task<>, this, x, z, &prng, otMsg, &chl, msg = Matrix<F>{},
-             buffer = std::vector<block>{}, xb = BitVector{});
+    MC_BEGIN(task<>, this, x, z, prng = std::move(PRNG{}), otMsg, &chl, msg = Matrix<F>{},
+             xb = BitVector{});
 
     if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
     setTimePoint("NoisyVoleSender.main");
@@ -68,16 +68,13 @@ class NoisySubfieldVoleSender : public TimerAdapter {
     MC_AWAIT(chl.recv(msg));
 
     setTimePoint("NoisyVoleSender.recvMsg");
-    buffer.resize(z.size());
 
     xb = BitVector((u8*)&x, sizeof(F) * 8);
-
     for (u64 i = 0; i < sizeof(F) * 8; ++i) {
-      PRNG pi(otMsg[i]);
-      pi.get<block>(buffer);
+      prng.SetSeed(otMsg[i], z.size());
 
       for (u64 j = 0; j < (u64)z.size(); ++j) {
-        F bufj = TypeTrait::fromBlock(buffer[j]);
+        F bufj = TypeTrait::fromBlock(prng.mBuffer[j]);
         z[j] = z[j] + (xb[i] ? msg(i,j) - bufj : bufj);
       }
     }
