@@ -113,9 +113,19 @@ struct TypeTraitVec {
   using G = T;
 
   static OC_FORCEINLINE F fromBlock(const block &b) {
-    PRNG prng(b, N * sizeof(T));
     F ret{};
-    memcpy(ret.v.data(), prng.mBuffer.data(), N * sizeof(T));
+    if (N * sizeof(T) <= sizeof(block)) {
+        memcpy(ret.v.data(), &b, N * sizeof(T));
+        } else {
+        size_t numBlocks = (N * sizeof(T) + sizeof(block) - 1) / sizeof(block);
+        block* blocks = new block[numBlocks];
+        for (u64 i = 0; i < numBlocks; ++i) {
+            blocks[i] = b + block(i, i);
+        }
+        mAesFixedKey.hashBlocks(blocks, numBlocks, blocks);
+        memcpy(ret.v.data(), blocks, N * sizeof(T));
+        delete[] blocks;
+    }
     return ret;
   }
   static OC_FORCEINLINE F pow(u64 power) {

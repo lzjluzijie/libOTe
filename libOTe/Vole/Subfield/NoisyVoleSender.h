@@ -62,8 +62,8 @@ class NoisySubfieldVoleSender : public TimerAdapter {
     if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
     setTimePoint("NoisyVoleSender.main");
 
-    msg.resize(otMsg.size(), z.size());
     memset(z.data(), 0, sizeof(F) * z.size());
+    msg.resize(otMsg.size(), z.size(), AllocType::Uninitialized);
 
     MC_AWAIT(chl.recv(msg));
 

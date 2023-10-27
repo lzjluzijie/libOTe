@@ -63,13 +63,14 @@ class NoisySubfieldVoleReceiver : public TimerAdapter {
              prng = std::move(PRNG{})
     );
 
-    setTimePoint("NoisyVoleReceiver.begin");
     if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
     if (y.size() != z.size()) throw RTE_LOC;
     if (z.size() == 0) throw RTE_LOC;
 
+    setTimePoint("NoisyVoleReceiver.begin");
+
     memset(z.data(), 0, sizeof(F) * z.size());
-    msg.resize(otMsg.size(), z.size());
+    msg.resize(otMsg.size(), z.size(), AllocType::Uninitialized);
 
     for (u64 ii = 0; ii < sizeof(F) * 8; ++ii) {
       prng.SetSeed(otMsg[ii][0], z.size());
