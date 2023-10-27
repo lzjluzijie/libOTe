@@ -111,27 +111,34 @@ template<typename T, size_t N>
 struct TypeTraitVec {
   using F = Vec<T, N>;
   using G = T;
+  static constexpr size_t bitsG = sizeof(T) * 8;
+  static constexpr size_t bitsF = N * bitsG;
+  static constexpr size_t bytesF = N * sizeof(T);
+  static constexpr size_t sizeBlocks = (N * sizeof(T) + sizeof(block) - 1) / sizeof(block);
+  union Buf {
+    F f;
+    block b[sizeBlocks];
+  };
 
   static OC_FORCEINLINE F fromBlock(const block &b) {
-    F ret{};
     if (N * sizeof(T) <= sizeof(block)) {
-        memcpy(ret.v.data(), &b, N * sizeof(T));
-        } else {
-        size_t numBlocks = (N * sizeof(T) + sizeof(block) - 1) / sizeof(block);
-        block* blocks = new block[numBlocks];
-        for (u64 i = 0; i < numBlocks; ++i) {
-            blocks[i] = b + block(i, i);
-        }
-        mAesFixedKey.hashBlocks(blocks, numBlocks, blocks);
-        memcpy(ret.v.data(), blocks, N * sizeof(T));
-        delete[] blocks;
+      F ret;
+      memcpy(ret.v.data(), &b, bytesF);
+      return ret;
+    } else {
+      Buf buf;
+      for (u64 i = 0; i < sizeBlocks; ++i) {
+        buf.b[i] = b + block(i, i);
+      }
+      mAesFixedKey.hashBlocks(buf.b, sizeBlocks, buf.b);
+      return buf.f;
     }
-    return ret;
   }
+
   static OC_FORCEINLINE F pow(u64 power) {
     F ret{};
-    power = power % (N * sizeof(T) * 8);
-    ret[power / (sizeof(T) * 8)] = 1 << (power % (sizeof(T) * 8));
+    power = power % bitsF;
+    ret[power / bitsG] = 1 << (power % bitsG);
     return ret;
   }
 };
