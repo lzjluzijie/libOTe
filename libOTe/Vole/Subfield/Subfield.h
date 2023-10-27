@@ -2,11 +2,43 @@
 
 using namespace oc;
 
+struct F128 {
+  block b;
+  F128() = default;
+  explicit F128(const block &b) : b(b) {}
+  OC_FORCEINLINE F128 operator+(const F128 &rhs) const {
+    F128 ret;
+    ret.b = b ^ rhs.b;
+    return ret;
+  }
+  OC_FORCEINLINE F128 operator-(const F128 &rhs) const {
+    F128 ret;
+    ret.b = b ^ rhs.b;
+    return ret;
+  }
+  OC_FORCEINLINE F128 operator*(const F128 &rhs) const {
+    F128 ret;
+    ret.b = b.gf128Mul(rhs.b);
+    return ret;
+  }
+  OC_FORCEINLINE bool operator==(const F128 &rhs) const {
+    return b == rhs.b;
+  }
+  OC_FORCEINLINE bool operator!=(const F128 &rhs) const {
+    return b != rhs.b;
+  }
+};
+
 using u128 = unsigned __int128;
 union conv128 {
   u128 u;
   block m;
 };
+OC_FORCEINLINE u128 fromBlock(const block &b) {
+  conv128 c{};
+  c.m = b;
+  return c.u;
+}
 inline std::string u128ToString(u128 value) {
   if (value == 0) {
     return "0";

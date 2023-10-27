@@ -1,8 +1,8 @@
 #include "ExConvCode_Tests.h"
 #include "libOTe/Tools/ExConvCode/ExConvCode.h"
-#include "libOTe/Tools/ExConvCode/ExConvCode.h"
-#include <iomanip>
+#include "libOTe/Vole/Subfield/Subfield.h"
 
+#include <iomanip>
 
 namespace osuCrypto
 {
@@ -220,64 +220,39 @@ namespace osuCrypto
         }
     }
 
-using u128 = unsigned __int128;
-union conv128 {
-  u128 u;
-  block m;
-};
-inline std::string u128ToString(u128 value) {
-  if (value == 0) {
-    return "0";
-  }
 
-  std::string result;
-  while (value > 0) {
-    uint64_t digit = value % 10;
-    result.push_back(static_cast<char>('0' + digit));
-    value /= 10;
-  }
-  reverse(result.begin(), result.end());
-  return result;
-}
-static inline u128 fromBlock(const block& b) {
-  conv128 c{};
-  c.m = b;
-  return c.u;
-}
 
 void ExConvCode_encode_u128_test(const oc::CLP& cmd)
     {
-//      {
-//        u64 n = 1024;
-//        ExConvCode code;
-//        code.config(n / 2, n, 7, 24, true);
-//
-//        PRNG prng(ZeroBlock);
-//        block delta = prng.get<block>();
-//        std::vector<block> y(n), z0(n), z1(n);
-//        prng.get(y.data(), y.size());
-//        prng.get(z0.data(), z0.size());
-//        for (u64 i = 0; i < n; ++i)
-//        {
-//          z1[i] = z0[i] ^ delta.gf128Mul(y[i]);
-//        }
-//
-////        y.resize(2*n);
-////        z0.resize(2*n);
-////        z1.resize(2*n);
-//
-//        code.dualEncode<block>(z1);
-//        code.dualEncode<block>(z0);
-//        code.dualEncode<block>(y);
-//
-//        for (u64 i = 0; i < n; ++i)
-//        {
-//          block left = delta.gf128Mul(y[i]);
-//          block right = z1[i] ^ z0[i];
-//          if (left != right)
-//            throw RTE_LOC;
-//        }
-//      }
+      {
+        u64 n = 1024;
+        ExConvCode code;
+        code.config(n / 2, n, 7, 24, true);
+
+        PRNG prng(ZeroBlock);
+        F128 delta = prng.get<F128>();
+        std::vector<F128> y(n), z0(n), z1(n);
+        prng.get(y.data(), y.size());
+        prng.get(z0.data(), z0.size());
+        for (u64 i = 0; i < n; ++i)
+        {
+          z1[i] = z0[i] + delta * y[i];
+        }
+
+        assert(std::is_trivial<F128>::value);
+
+        code.dualEncode<F128>(z1);
+        code.dualEncode<F128>(z0);
+        code.dualEncode<F128>(y);
+
+        for (u64 i = 0; i < n; ++i)
+        {
+          F128 left = delta * y[i];
+          F128 right = z1[i] - z0[i];
+          if (left != right)
+            throw RTE_LOC;
+        }
+      }
 
       {
         u64 n = 1024;

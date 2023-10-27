@@ -428,14 +428,15 @@ namespace osuCrypto
         }
         else
         {
-          auto bb0 = xx[i] * (b[0].get<i32>(0) < 0);
-          auto bb1 = xx[i] * (b[1].get<i32>(0) < 0);
-          auto bb2 = xx[i] * (b[2].get<i32>(0) < 0);
-          auto bb3 = xx[i] * (b[3].get<i32>(0) < 0);
-          auto bb4 = xx[i] * (b[4].get<i32>(0) < 0);
-          auto bb5 = xx[i] * (b[5].get<i32>(0) < 0);
-          auto bb6 = xx[i] * (b[6].get<i32>(0) < 0);
-          auto bb7 = xx[i] * (b[7].get<i32>(0) < 0);
+          // add if condition to the if below?
+          auto bb0 = (b[0].get<i32>(0) < 0) ? xx[i] : T{};
+          auto bb1 = (b[1].get<i32>(0) < 0) ? xx[i] : T{};
+          auto bb2 = (b[2].get<i32>(0) < 0) ? xx[i] : T{};
+          auto bb3 = (b[3].get<i32>(0) < 0) ? xx[i] : T{};
+          auto bb4 = (b[4].get<i32>(0) < 0) ? xx[i] : T{};
+          auto bb5 = (b[5].get<i32>(0) < 0) ? xx[i] : T{};
+          auto bb6 = (b[6].get<i32>(0) < 0) ? xx[i] : T{};
+          auto bb7 = (b[7].get<i32>(0) < 0) ? xx[i] : T{};
 
 //            if (!rangeCheck || j + 0 < size) xx[j + 0] = xx[j + 0] ^ bb0;
 //            if (!rangeCheck || j + 1 < size) xx[j + 1] = xx[j + 1] ^ bb1;
