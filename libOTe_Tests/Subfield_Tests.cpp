@@ -173,7 +173,6 @@ void Subfield_Tools_Pprf_test(const oc::CLP& cmd) {
     auto p1 = recver.expand(sockets[1], prng, rOut2, format, true, threads);
 
     eval(p0, p1);
-    std::cout << "OK" << std::endl;
     for (u64 i = 0; i < numPoints; i++) {
       u64 point = points[i];
       auto exp = sOut2(point) + arr[i];
@@ -182,62 +181,6 @@ void Subfield_Tools_Pprf_test(const oc::CLP& cmd) {
       }
     }
   }
-
-//  {
-//    u64 domain = cmd.getOr("d", 16);
-//    auto threads = cmd.getOr("t", 1);
-//    u64 numPoints = cmd.getOr("s", 1) * 8;
-//
-//    PRNG prng(ZeroBlock);
-//
-//    auto sockets = cp::LocalAsyncSocket::makePair();
-//
-//    auto format = PprfOutputFormat::Interleaved;
-//
-//    using F = TypeTraitVec::F;
-//
-//    SilentSubfieldPprfSender<TypeTraitVec> sender;
-//    SilentSubfieldPprfReceiver<TypeTraitVec> recver;
-//
-//    sender.configure(domain, numPoints);
-//    recver.configure(domain, numPoints);
-//
-//    auto numOTs = sender.baseOtCount();
-//    std::vector<std::array<block, 2>> sendOTs(numOTs);
-//    std::vector<block> recvOTs(numOTs);
-//    BitVector recvBits = recver.sampleChoiceBits(domain * numPoints, format, prng);
-//    //recvBits.randomize(prng);
-//
-//    //recvBits[16] = 1;
-//    prng.get(sendOTs.data(), sendOTs.size());
-//    for (u64 i = 0; i < numOTs; ++i) {
-//      //recvBits[i] = 0;
-//      recvOTs[i] = sendOTs[i][recvBits[i]];
-//    }
-//    sender.setBase(sendOTs);
-//    recver.setBase(recvOTs);
-//
-//    //auto cols = (numPoints * domain + 127) / 128;
-//    Matrix<F> sOut2(numPoints * domain, 1);
-//    Matrix<F> rOut2(numPoints * domain, 1);
-//    std::vector<u64> points(numPoints);
-//    recver.getPoints(points, format);
-//
-//    std::vector<F> arr(numPoints);
-//    prng.get(arr.data(), arr.size());
-//    auto p0 = sender.expand(sockets[0], arr, prng, sOut2, format, true, threads);
-//    auto p1 = recver.expand(sockets[1], prng, rOut2, format, true, threads);
-//
-//    eval(p0, p1);
-//    std::cout << "OK" << std::endl;
-//    for (u64 i = 0; i < numPoints; i++) {
-//      u64 point = points[i];
-//      auto exp = sOut2(point) + arr[i];
-//      if (exp != rOut2(point)) {
-//        throw RTE_LOC;
-//      }
-//    }
-//  }
 
 #else
   throw UnitTestSkipped("ENABLE_SILENTOT not defined.");
@@ -377,7 +320,7 @@ void Subfield_Noisy_Vole_test(const oc::CLP& cmd) {
       auto p1 = send.send(x, z1, prng, otRecvMsg, chls[1]);
 
       eval(p0, p1);
-      std::cout << "transferred " << (chls[0].bytesSent() + chls[0].bytesReceived()) << std::endl;
+//      std::cout << "transferred " << (chls[0].bytesSent() + chls[0].bytesReceived()) << std::endl;
       timer.setTimePoint("verify");
 
       for (u64 i = 0; i < n; ++i)
@@ -393,7 +336,7 @@ void Subfield_Noisy_Vole_test(const oc::CLP& cmd) {
       }
       timer.setTimePoint("done");
 
-      std::cout << timer << std::endl;
+//      std::cout << timer << std::endl;
     }
 }
 
@@ -521,7 +464,7 @@ void Subfield_Silent_Vole_test(const oc::CLP& cmd) {
     auto p1 = recv.silentReceive(span<G>(c), span<F>(z1), prng, chls[1]);
 
     eval(p0, p1);
-    std::cout << "transferred " << (chls[0].bytesSent() + chls[0].bytesReceived()) << std::endl;
+//    std::cout << "transferred " << (chls[0].bytesSent() + chls[0].bytesReceived()) << std::endl;
     timer.setTimePoint("verify");
 
     timer.setTimePoint("send");
@@ -539,7 +482,7 @@ void Subfield_Silent_Vole_test(const oc::CLP& cmd) {
   }
 
   timer.setTimePoint("done");
-  std::cout << timer << std::endl;
+//  std::cout << timer << std::endl;
 #else
   throw UnitTestSkipped("not defined." LOCATION);
 #endif

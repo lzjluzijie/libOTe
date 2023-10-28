@@ -428,16 +428,6 @@ namespace osuCrypto::Subfield
         }
         else
         {
-          // add if condition to the if below?
-          auto bb0 = (b[0].get<i32>(0) < 0) ? xx[i] : T{};
-          auto bb1 = (b[1].get<i32>(0) < 0) ? xx[i] : T{};
-          auto bb2 = (b[2].get<i32>(0) < 0) ? xx[i] : T{};
-          auto bb3 = (b[3].get<i32>(0) < 0) ? xx[i] : T{};
-          auto bb4 = (b[4].get<i32>(0) < 0) ? xx[i] : T{};
-          auto bb5 = (b[5].get<i32>(0) < 0) ? xx[i] : T{};
-          auto bb6 = (b[6].get<i32>(0) < 0) ? xx[i] : T{};
-          auto bb7 = (b[7].get<i32>(0) < 0) ? xx[i] : T{};
-
 //            if (!rangeCheck || j + 0 < size) xx[j + 0] = xx[j + 0] ^ bb0;
 //            if (!rangeCheck || j + 1 < size) xx[j + 1] = xx[j + 1] ^ bb1;
 //            if (!rangeCheck || j + 2 < size) xx[j + 2] = xx[j + 2] ^ bb2;
@@ -447,14 +437,14 @@ namespace osuCrypto::Subfield
 //            if (!rangeCheck || j + 6 < size) xx[j + 6] = xx[j + 6] ^ bb6;
 //            if (!rangeCheck || j + 7 < size) xx[j + 7] = xx[j + 7] ^ bb7;
 
-          if (!rangeCheck || j + 0 < size) xx[j + 0] = xx[j + 0] + bb0;
-          if (!rangeCheck || j + 1 < size) xx[j + 1] = xx[j + 1] + bb1;
-          if (!rangeCheck || j + 2 < size) xx[j + 2] = xx[j + 2] + bb2;
-          if (!rangeCheck || j + 3 < size) xx[j + 3] = xx[j + 3] + bb3;
-          if (!rangeCheck || j + 4 < size) xx[j + 4] = xx[j + 4] + bb4;
-          if (!rangeCheck || j + 5 < size) xx[j + 5] = xx[j + 5] + bb5;
-          if (!rangeCheck || j + 6 < size) xx[j + 6] = xx[j + 6] + bb6;
-          if (!rangeCheck || j + 7 < size) xx[j + 7] = xx[j + 7] + bb7;
+          if ((!rangeCheck || j + 0 < size) && b[0].get<i32>(0) < 0) xx[j + 0] = xx[j + 0] + xx[i];
+          if ((!rangeCheck || j + 1 < size) && b[1].get<i32>(0) < 0) xx[j + 1] = xx[j + 1] + xx[i];
+          if ((!rangeCheck || j + 2 < size) && b[2].get<i32>(0) < 0) xx[j + 2] = xx[j + 2] + xx[i];
+          if ((!rangeCheck || j + 3 < size) && b[3].get<i32>(0) < 0) xx[j + 3] = xx[j + 3] + xx[i];
+          if ((!rangeCheck || j + 4 < size) && b[4].get<i32>(0) < 0) xx[j + 4] = xx[j + 4] + xx[i];
+          if ((!rangeCheck || j + 5 < size) && b[5].get<i32>(0) < 0) xx[j + 5] = xx[j + 5] + xx[i];
+          if ((!rangeCheck || j + 6 < size) && b[6].get<i32>(0) < 0) xx[j + 6] = xx[j + 6] + xx[i];
+          if ((!rangeCheck || j + 7 < size) && b[7].get<i32>(0) < 0) xx[j + 7] = xx[j + 7] + xx[i];
         }
       }
 
