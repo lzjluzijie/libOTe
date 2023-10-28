@@ -1,6 +1,6 @@
 #include "libOTe/Vole/Noisy/NoisyVoleSender.h"
 
-using namespace oc;
+namespace osuCrypto::Subfield {
 
 struct F128 {
   block b;
@@ -174,3 +174,5 @@ struct TypeTraitVec {
     return ret;
   }
 };
+
+}

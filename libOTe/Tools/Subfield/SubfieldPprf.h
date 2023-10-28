@@ -1,17 +1,18 @@
 #pragma once
-#include <libOTe/config.h>
-#include <cryptoTools/Common/Defines.h>
-#include <cryptoTools/Common/BitVector.h>
-#include <cryptoTools/Common/Matrix.h>
-#include <cryptoTools/Common/Timer.h>
-#include <cryptoTools/Common/Aligned.h>
-#include <cryptoTools/Common/Range.h>
-#include <cryptoTools/Crypto/PRNG.h>
+#include "out/build/linux/libOTe/config.h"
+#include "cryptoTools/cryptoTools/Common/Defines.h"
+#include "cryptoTools/cryptoTools/Common/BitVector.h"
+#include "cryptoTools/cryptoTools/Common/Matrix.h"
+#include "cryptoTools/cryptoTools/Common/Timer.h"
+#include "cryptoTools/cryptoTools/Common/Aligned.h"
+#include "cryptoTools/cryptoTools/Common/Range.h"
+#include "cryptoTools/cryptoTools/Crypto/PRNG.h"
 #include "libOTe/Tools/Coproto.h"
-#include "libOTe/Tools/SubfieldPprf.h"
+#include "libOTe/Tools/SilentPprf.h"
+#include "SubfieldPprf.h"
 #include <array>
 
-namespace osuCrypto
+namespace osuCrypto::Subfield
 {
     template<typename F>
     void copyOut(
@@ -143,9 +144,69 @@ namespace osuCrypto
         else
             throw RTE_LOC;
     }
-    u64 interleavedPoint(u64 point, u64 treeIdx, u64 totalTrees, u64 domain, PprfOutputFormat format);
-    void interleavedPoints(span<u64> points, u64 domain, PprfOutputFormat format);
-    u64 getActivePath(const span<u8>& choiceBits);
+
+//    u64 interleavedPoint(u64 point, u64 treeIdx, u64 totalTrees, u64 domain, PprfOutputFormat format)
+//    {
+//      switch (format)
+//      {
+//        case osuCrypto::PprfOutputFormat::Interleaved:
+//        case osuCrypto::PprfOutputFormat::Callback:
+//        {
+//
+//          if (domain <= point)
+//            return ~u64(0);
+//
+//          auto subTree = treeIdx % 8;
+//          auto forest = treeIdx / 8;
+//
+//          return (forest * domain + point) * 8 + subTree;
+//        }
+//          break;
+//        case osuCrypto::PprfOutputFormat::InterleavedTransposed:
+//        {
+//          auto numSets = totalTrees / 8;
+//
+//          auto setIdx = treeIdx / 8;
+//          auto subIdx = treeIdx % 8;
+//
+//          auto sectionIdx = point / 16;
+//          auto posIdx = point % 16;
+//
+//
+//          auto setOffset = setIdx * 128;
+//          auto subOffset = subIdx + 8 * posIdx;
+//          auto secOffset = sectionIdx * numSets * 128;
+//
+//          return setOffset + subOffset + secOffset;
+//        }
+//        default:
+//          throw RTE_LOC;
+//          break;
+//      }
+//      //auto totalTrees = points.size();
+//
+//    }
+//
+//    void interleavedPoints(span<u64> points, u64 domain, PprfOutputFormat format)
+//    {
+//
+//      for (u64 i = 0; i < points.size(); ++i)
+//      {
+//        points[i] = interleavedPoint(points[i], i, points.size(), domain, format);
+//      }
+//    }
+//
+//    u64 getActivePath(const span<u8>& choiceBits)
+//    {
+//      u64 point = 0;
+//      for (u64 i = 0; i < choiceBits.size(); ++i)
+//      {
+//        auto shift = choiceBits.size() - i - 1;
+//
+//        point |= u64(1 ^ choiceBits[i]) << shift;
+//      }
+//      return point;
+//    }
 
     template<typename TypeTrait>
     class SilentSubfieldPprfSender : public TimerAdapter

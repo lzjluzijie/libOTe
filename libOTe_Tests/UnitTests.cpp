@@ -16,6 +16,7 @@
 #include "libOTe_Tests/ExConvCode_Tests.h"
 #include "libOTe_Tests/EACode_Tests.h"
 #include "libOTe/Tools/LDPC/Mtx.h"
+#include "libOTe_Tests/Subfield_Test.h"
 
 using namespace osuCrypto;
 namespace tests_libOTe
@@ -56,10 +57,8 @@ namespace tests_libOTe
 
             tc.add("EACode_encode_basic_test                ", EACode_encode_basic_test);
             tc.add("ExConvCode_encode_basic_test            ", ExConvCode_encode_basic_test);
-            tc.add("ExConvCode_encode_u128_test             ", ExConvCode_encode_u128_test);
 
             tc.add("Tools_Pprf_test                         ", Tools_Pprf_test);
-            tc.add("Tools_Pprf_subfield_test                ", Tools_Pprf_subfield_test);
             tc.add("Tools_Pprf_trans_test                   ", Tools_Pprf_trans_test);
             tc.add("Tools_Pprf_inter_test                   ", Tools_Pprf_inter_test);
             tc.add("Tools_Pprf_blockTrans_test              ", Tools_Pprf_blockTrans_test);
@@ -107,9 +106,7 @@ namespace tests_libOTe
             tc.add("DotExt_SoftSpokenMaliciousLeaky_Test    ", DotExt_SoftSpokenMaliciousLeaky_Test);
 
             tc.add("Vole_Noisy_test                         ", Vole_Noisy_test);
-            tc.add("Vole_Subfield_test                      ", Vole_Subfield_test);
             tc.add("Vole_Silent_QuasiCyclic_test            ", Vole_Silent_QuasiCyclic_test);
-            tc.add("Vole_Silent_Subfield_test               ", Vole_Silent_Subfield_test);
             tc.add("Vole_Silent_Silver_test                 ", Vole_Silent_Silver_test);
             tc.add("Vole_Silent_paramSweep_test             ", Vole_Silent_paramSweep_test);
             tc.add("Vole_Silent_baseOT_test                 ", Vole_Silent_baseOT_test);
@@ -119,6 +116,11 @@ namespace tests_libOTe
             tc.add("NcoOt_Kkrt_Test                         ", NcoOt_Kkrt_Test);
             tc.add("NcoOt_Oos_Test                          ", NcoOt_Oos_Test);
             tc.add("NcoOt_genBaseOts_Test                   ", NcoOt_genBaseOts_Test);
+
+            tc.add("Subfield_ExConvCode_encode_test         ", Subfield::Subfield_ExConvCode_encode_test);
+            tc.add("Subfield_Tools_Pprf_test                ", Subfield::Subfield_Tools_Pprf_test);
+            tc.add("Subfield_Noisy_Vole_test                ", Subfield::Subfield_Noisy_Vole_test);
+            tc.add("Subfield_Silent_Vole_test               ", Subfield::Subfield_Silent_Vole_test);
 
         });
 }

@@ -33,7 +33,7 @@
 #include "libOTe/Tools/Coproto.h"
 #include "libOTe/TwoChooseOne/OTExtInterface.h"
 
-namespace osuCrypto {
+namespace osuCrypto::Subfield {
 
 template <typename TypeTrait>
 class NoisySubfieldVoleReceiver : public TimerAdapter {

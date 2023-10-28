@@ -27,13 +27,14 @@
 #include <libOTe/config.h>
 #if defined(ENABLE_SILENT_VOLE) || defined(ENABLE_SILENTOT)
 
+#include "cryptoTools/Common/BitVector.h"
 #include "cryptoTools/Common/Defines.h"
 #include "cryptoTools/Common/Timer.h"
 #include "cryptoTools/Crypto/PRNG.h"
 #include "libOTe/Tools/Coproto.h"
 #include "libOTe/TwoChooseOne/OTExtInterface.h"
 
-namespace osuCrypto {
+namespace osuCrypto::Subfield {
 template <typename TypeTrait>
 class NoisySubfieldVoleSender : public TimerAdapter {
  public:
@@ -41,7 +42,8 @@ class NoisySubfieldVoleSender : public TimerAdapter {
   using G = typename TypeTrait::G;
   task<> send(F x, span<F> z, PRNG& prng,
                                OtReceiver& ot, Socket& chl) {
-    MC_BEGIN(task<>, this, x, z, &prng, &ot, &chl, bv = BitVector((u8*)&x, sizeof(F) * 8),
+    MC_BEGIN(task<>, this, x, z, &prng, &ot, &chl,
+             bv = BitVector((u8*)&x, sizeof(F) * 8),
              otMsg = AlignedUnVector<block>{sizeof(F) * 8}); // todo: sizeof(F) * 8
 
     setTimePoint("NoisyVoleSender.ot.begin");

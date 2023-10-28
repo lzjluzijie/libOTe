@@ -14,20 +14,18 @@
 #include <cryptoTools/Common/Defines.h>
 #include <cryptoTools/Common/Timer.h>
 #include <libOTe/Tools/Tools.h>
-#include <libOTe/Tools/SubfieldPprf.h>
+#include "libOTe/Tools/Subfield/SubfieldPprf.h"
 #include <libOTe/TwoChooseOne/TcoOtDefines.h>
 #include <libOTe/TwoChooseOne/OTExtInterface.h>
 #include <libOTe/TwoChooseOne/SoftSpokenOT/SoftSpokenMalOtExt.h>
 #include <libOTe/Tools/LDPC/LdpcEncoder.h>
-#include <libOTe/Tools/EACode/EACode.h>
 #include <libOTe/Tools/Coproto.h>
-#include <libOTe/Tools/QuasiCyclicCode.h>
-#include <libOTe/Tools/ExConvCode/ExConvCode.h>
+#include <libOTe/Tools/Subfield/ExConvCode.h>
 #include <libOTe/Base/BaseOT.h>
 #include <libOTe/Vole/Subfield/NoisyVoleReceiver.h>
 #include <libOTe/Vole/Subfield/NoisyVoleSender.h>
 
-namespace osuCrypto
+namespace osuCrypto::Subfield
 {
 
 
@@ -81,10 +79,10 @@ namespace osuCrypto
 #endif
 
         ExConvCode mExConvEncoder;
-        EACode mEAEncoder;
+//        EACode mEAEncoder;
 
 #ifdef ENABLE_BITPOLYMUL
-        QuasiCyclicCode mQuasiCyclicEncoder;
+//        QuasiCyclicCode mQuasiCyclicEncoder;
 #endif
 
         // The multi-point punctured PRF for generating
@@ -322,7 +320,7 @@ namespace osuCrypto
             case osuCrypto::MultType::ExConv7x24:
             case osuCrypto::MultType::ExConv21x24:
 
-              ExConvConfigure(numOTs, 128, mMultType, mRequestedNumOTs, mNumPartitions, mSizePer, mN2, mN, mExConvEncoder);
+              SubfieldExConvConfigure(numOTs, 128, mMultType, mRequestedNumOTs, mNumPartitions, mSizePer, mN2, mN, mExConvEncoder);
               break;
             default:
               throw RTE_LOC;

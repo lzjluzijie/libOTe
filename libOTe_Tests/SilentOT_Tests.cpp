@@ -1,7 +1,6 @@
 #include "SilentOT_Tests.h"
 
 #include "libOTe/Tools/SilentPprf.h"
-#include "libOTe/Tools/SubfieldPprf.h"
 #include "libOTe/TwoChooseOne/Silent/SilentOtExtSender.h"
 #include "libOTe/TwoChooseOne/Silent/SilentOtExtReceiver.h"
 #include <cryptoTools/Common/Log.h>
@@ -12,9 +11,6 @@
 #include "libOTe/Tools/Tools.h"
 #include "libOTe/Tools/QuasiCyclicCode.h"
 #include "Common.h"
-
-#include "libOTe/Vole/Subfield/Subfield.h"
-
 using namespace oc;
 
 void Tools_bitShift_test(const CLP& cmd)
@@ -932,125 +928,6 @@ void Tools_Pprf_test(const CLP& cmd)
 #endif
 }
 
-void Tools_Pprf_subfield_test(const CLP& cmd)
-{
-#if defined(ENABLE_SILENTOT) || defined(ENABLE_SILENT_VOLE)
-
-  {
-    u64 domain = cmd.getOr("d", 16);
-    auto threads = cmd.getOr("t", 1);
-    u64 numPoints = cmd.getOr("s", 1) * 8;
-
-    PRNG prng(ZeroBlock);
-
-    auto sockets = cp::LocalAsyncSocket::makePair();
-
-    auto format = PprfOutputFormat::Interleaved;
-    SilentSubfieldPprfSender<TypeTrait128> sender;
-    SilentSubfieldPprfReceiver<TypeTrait128> recver;
-
-    sender.configure(domain, numPoints);
-    recver.configure(domain, numPoints);
-
-    auto numOTs = sender.baseOtCount();
-    std::vector<std::array<block, 2>> sendOTs(numOTs);
-    std::vector<block> recvOTs(numOTs);
-    BitVector recvBits = recver.sampleChoiceBits(domain * numPoints, format, prng);
-    //recvBits.randomize(prng);
-
-    //recvBits[16] = 1;
-    prng.get(sendOTs.data(), sendOTs.size());
-    for (u64 i = 0; i < numOTs; ++i) {
-      //recvBits[i] = 0;
-      recvOTs[i] = sendOTs[i][recvBits[i]];
-    }
-    sender.setBase(sendOTs);
-    recver.setBase(recvOTs);
-
-    //auto cols = (numPoints * domain + 127) / 128;
-    Matrix<u128> sOut2(numPoints * domain, 1);
-    Matrix<u128> rOut2(numPoints * domain, 1);
-    std::vector<u64> points(numPoints);
-    recver.getPoints(points, format);
-
-    std::vector<u128> arr(numPoints);
-    prng.get(arr.data(), arr.size());
-    auto p0 = sender.expand(sockets[0], arr, prng, sOut2, format, true, threads);
-    auto p1 = recver.expand(sockets[1], prng, rOut2, format, true, threads);
-
-    eval(p0, p1);
-    std::cout << "OK" << std::endl;
-    for (u64 i = 0; i < numPoints; i++) {
-      u64 point = points[i];
-      auto exp = sOut2(point) + arr[i];
-      if (exp != rOut2(point)) {
-        throw RTE_LOC;
-      }
-    }
-  }
-
-//  {
-//    u64 domain = cmd.getOr("d", 16);
-//    auto threads = cmd.getOr("t", 1);
-//    u64 numPoints = cmd.getOr("s", 1) * 8;
-//
-//    PRNG prng(ZeroBlock);
-//
-//    auto sockets = cp::LocalAsyncSocket::makePair();
-//
-//    auto format = PprfOutputFormat::Interleaved;
-//
-//    using F = TypeTraitVec::F;
-//
-//    SilentSubfieldPprfSender<TypeTraitVec> sender;
-//    SilentSubfieldPprfReceiver<TypeTraitVec> recver;
-//
-//    sender.configure(domain, numPoints);
-//    recver.configure(domain, numPoints);
-//
-//    auto numOTs = sender.baseOtCount();
-//    std::vector<std::array<block, 2>> sendOTs(numOTs);
-//    std::vector<block> recvOTs(numOTs);
-//    BitVector recvBits = recver.sampleChoiceBits(domain * numPoints, format, prng);
-//    //recvBits.randomize(prng);
-//
-//    //recvBits[16] = 1;
-//    prng.get(sendOTs.data(), sendOTs.size());
-//    for (u64 i = 0; i < numOTs; ++i) {
-//      //recvBits[i] = 0;
-//      recvOTs[i] = sendOTs[i][recvBits[i]];
-//    }
-//    sender.setBase(sendOTs);
-//    recver.setBase(recvOTs);
-//
-//    //auto cols = (numPoints * domain + 127) / 128;
-//    Matrix<F> sOut2(numPoints * domain, 1);
-//    Matrix<F> rOut2(numPoints * domain, 1);
-//    std::vector<u64> points(numPoints);
-//    recver.getPoints(points, format);
-//
-//    std::vector<F> arr(numPoints);
-//    prng.get(arr.data(), arr.size());
-//    auto p0 = sender.expand(sockets[0], arr, prng, sOut2, format, true, threads);
-//    auto p1 = recver.expand(sockets[1], prng, rOut2, format, true, threads);
-//
-//    eval(p0, p1);
-//    std::cout << "OK" << std::endl;
-//    for (u64 i = 0; i < numPoints; i++) {
-//      u64 point = points[i];
-//      auto exp = sOut2(point) + arr[i];
-//      if (exp != rOut2(point)) {
-//        throw RTE_LOC;
-//      }
-//    }
-//  }
-
-#else
-    throw UnitTestSkipped("ENABLE_SILENTOT not defined.");
-#endif
-}
-
-
 void Tools_Pprf_trans_test(const CLP& cmd)
 {
 #if defined(ENABLE_SILENTOT) || defined(ENABLE_SILENT_VOLE)
@@ -1165,9 +1042,9 @@ void Tools_Pprf_inter_test(const CLP& cmd)
     //u64 domain = 13;// (1ull << depth) - 7;
     //u64 numPoints = 40;
 
-    u64 domain = cmd.getOr("d", 16);
-    auto threads = cmd.getOr("t", 1);
-    u64 numPoints = cmd.getOr("s", 1) * 8;
+    u64 domain = cmd.getOr("d", 334);
+    auto threads = cmd.getOr("t", 3ull);
+    u64 numPoints = cmd.getOr("s", 5) * 8;
     //bool mal = cmd.isSet("mal");
 
     PRNG prng(ZeroBlock);

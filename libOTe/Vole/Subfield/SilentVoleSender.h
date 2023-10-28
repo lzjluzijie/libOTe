@@ -15,21 +15,57 @@
 #include <cryptoTools/Crypto/PRNG.h>
 #include <cryptoTools/Common/Timer.h>
 #include <cryptoTools/Common/Aligned.h>
-#include <libOTe/Tools/SubfieldPprf.h>
+#include "libOTe/Tools/Subfield/SubfieldPprf.h"
 #include <libOTe/TwoChooseOne/TcoOtDefines.h>
 #include <libOTe/TwoChooseOne/OTExtInterface.h>
 #include <libOTe/TwoChooseOne/SoftSpokenOT/SoftSpokenMalOtExt.h>
 #include <libOTe/Tools/LDPC/LdpcEncoder.h>
-#include <libOTe/Tools/QuasiCyclicCode.h>
-#include <libOTe/Tools/EACode/EACode.h>
-#include <libOTe/Tools/ExConvCode/ExConvCode.h>
+#include <libOTe/Tools/Subfield/ExConvCode.h>
 #include <libOTe/Base/BaseOT.h>
 #include <libOTe/Vole/Subfield/NoisyVoleReceiver.h>
 #include <libOTe/Vole/Subfield/NoisyVoleSender.h>
 //#define NO_HASH
 
-namespace osuCrypto
+namespace osuCrypto::Subfield
 {
+    static void SubfieldExConvConfigure(
+        u64 numOTs, u64 secParam,
+        MultType mMultType,
+        u64& mRequestedNumOTs,
+        u64& mNumPartitions,
+        u64& mSizePer,
+        u64& mN2,
+        u64& mN,
+        ExConvCode& mEncoder
+    )
+    {
+      u64 a = 24;
+      auto mScaler = 2;
+      u64 w;
+      double minDist;
+      switch (mMultType)
+      {
+        case osuCrypto::MultType::ExConv7x24:
+          w = 7;
+          minDist = 0.1;
+          break;
+        case osuCrypto::MultType::ExConv21x24:
+          w = 21;
+          minDist = 0.15;
+          break;
+        default:
+          throw RTE_LOC;
+          break;
+      }
+
+      mRequestedNumOTs = numOTs;
+      mNumPartitions = getRegNoiseWeight(minDist, secParam);
+      mSizePer = roundUpTo((numOTs * mScaler + mNumPartitions - 1) / mNumPartitions, 8);
+      mN2 = mSizePer * mNumPartitions;
+      mN = mN2 / mScaler;
+
+      mEncoder.config(numOTs, numOTs * mScaler, w, a, true);
+    }
 
     template<typename TypeTrait>
     class SilentSubfieldVoleSender : public TimerAdapter
@@ -75,10 +111,10 @@ namespace osuCrypto
         SilverEncoder mEncoder;
 #endif
         ExConvCode mExConvEncoder;
-        EACode mEAEncoder;
+//        EACode mEAEncoder;
 
 #ifdef ENABLE_BITPOLYMUL
-        QuasiCyclicCode mQuasiCyclicEncoder;
+//        QuasiCyclicCode mQuasiCyclicEncoder;
 #endif
 
         //span<block> mB;
@@ -264,7 +300,7 @@ namespace osuCrypto
             case osuCrypto::MultType::ExConv7x24:
             case osuCrypto::MultType::ExConv21x24:
 
-              ExConvConfigure(numOTs, 128, mMultType, mRequestedNumOTs, mNumPartitions, mSizePer, mN2, mN, mExConvEncoder);
+              SubfieldExConvConfigure(numOTs, 128, mMultType, mRequestedNumOTs, mNumPartitions, mSizePer, mN2, mN, mExConvEncoder);
               break;
             default:
               throw RTE_LOC;
