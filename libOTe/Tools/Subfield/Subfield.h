@@ -147,6 +147,7 @@ struct TypeTraitVec {
   static constexpr size_t bitsF = sizeof(F) * 8;
   static constexpr size_t bytesF = sizeof(F);
   static constexpr size_t sizeBlocks = (bytesF + sizeof(block) - 1) / sizeof(block);
+  static constexpr size_t size = N;
   union Buf {
     F f;
     block b[sizeBlocks];

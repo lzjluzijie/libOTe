@@ -508,6 +508,10 @@ namespace osuCrypto::Subfield
                                     sum[6] = sum[6] ^ child[6];
                                     sum[7] = sum[7] ^ child[7];
                                 } else {
+                                    if (getLastLevel(pprf.mDepth, treeIdx).size() <= childIdx) {
+                                        childIdx = width;
+                                        break;
+                                    }
                                     auto& realChild = getLastLevel(pprf.mDepth, treeIdx)[childIdx];
                                     auto& lastSum = lastSums[keep];
                                     realChild[0] = TypeTrait::fromBlock(child[0]);
@@ -1246,6 +1250,10 @@ namespace osuCrypto::Subfield
                                 sum[6] = sum[6] ^ child[6];
                                 sum[7] = sum[7] ^ child[7];
                             } else {
+                                if (getLastLevel(pprf.mDepth, treeIdx).size() <= childIdx) {
+                                    childIdx = width;
+                                    break;
+                                }
                                 auto& realChild = getLastLevel(pprf.mDepth, treeIdx)[childIdx];
                                 auto& lastSum = lastSums[keep];
                                 realChild[0] = TypeTrait::fromBlock(child[0]);
