@@ -35,57 +35,62 @@
 #include "libOTe/TwoChooseOne/OTExtInterface.h"
 
 namespace osuCrypto::Subfield {
-template <typename TypeTrait>
-class NoisySubfieldVoleSender : public TimerAdapter {
- public:
-  using F = typename TypeTrait::F;
-  using G = typename TypeTrait::G;
-  task<> send(F x, span<F> z, PRNG& prng,
-                               OtReceiver& ot, Socket& chl) {
-    MC_BEGIN(task<>, this, x, z, &prng, &ot, &chl,
-             bv = BitVector((u8*)&x, sizeof(F) * 8),
-             otMsg = AlignedUnVector<block>{sizeof(F) * 8}); // todo: sizeof(F) * 8
+    template <typename TypeTrait>
+    class NoisySubfieldVoleSender : public TimerAdapter {
+    public:
+        using F = typename TypeTrait::F;
+        using G = typename TypeTrait::G;
+        task<> send(F x, span<F> z, PRNG& prng,
+            OtReceiver& ot, Socket& chl) {
+            MC_BEGIN(task<>, this, x, z, &prng, &ot, &chl,
+                bv = BitVector((u8*)&x, sizeof(F) * 8),
+                otMsg = AlignedUnVector<block>{ sizeof(F) * 8 });
 
-    setTimePoint("NoisyVoleSender.ot.begin");
+            setTimePoint("NoisyVoleSender.ot.begin");
 
-    MC_AWAIT(ot.receive(bv, otMsg, prng, chl));
-    setTimePoint("NoisyVoleSender.ot.end");
+            MC_AWAIT(ot.receive(bv, otMsg, prng, chl));
+            setTimePoint("NoisyVoleSender.ot.end");
 
-    MC_AWAIT(send(x, z, prng, otMsg, chl));
+            MC_AWAIT(send(x, z, prng, otMsg, chl));
 
-    MC_END();
-  }
+            MC_END();
+        }
 
-  task<> send(F x, span<F> z, PRNG& _,
-                               span<block> otMsg, Socket& chl) {
-    MC_BEGIN(task<>, this, x, z, prng = std::move(PRNG{}), otMsg, &chl, msg = Matrix<F>{},
-             xb = BitVector{});
+        task<> send(F x, span<F> z, PRNG& _,
+            span<block> otMsg, Socket& chl) {
+            MC_BEGIN(task<>, this, x, z, otMsg, &chl,
+                prng = std::move(PRNG{}),
+                msg = Matrix<F>{},
+                xb = BitVector{});
 
-    if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
-    setTimePoint("NoisyVoleSender.main");
+            if (otMsg.size() != sizeof(F) * 8)
+                throw RTE_LOC;
+            setTimePoint("NoisyVoleSender.main");
 
-    memset(z.data(), 0, sizeof(F) * z.size());
-    msg.resize(otMsg.size(), z.size(), AllocType::Uninitialized);
+            memset(z.data(), 0, sizeof(F) * z.size());
+            msg.resize(otMsg.size(), z.size(), AllocType::Uninitialized);
 
-    MC_AWAIT(chl.recv(msg));
+            MC_AWAIT(chl.recv(msg));
 
-    setTimePoint("NoisyVoleSender.recvMsg");
+            setTimePoint("NoisyVoleSender.recvMsg");
 
-    xb = BitVector((u8*)&x, sizeof(F) * 8);
-    for (u64 i = 0; i < sizeof(F) * 8; ++i) {
-      prng.SetSeed(otMsg[i], z.size());
+            xb = BitVector((u8*)&x, sizeof(F) * 8);
+            for (u64 i = 0; i < sizeof(F) * 8; ++i)
+            {
+                prng.SetSeed(otMsg[i], z.size());
 
-      for (u64 j = 0; j < (u64)z.size(); ++j) {
-        F bufj = TypeTrait::fromBlock(prng.mBuffer[j]);
-        z[j] = z[j] + (xb[i] ? msg(i,j) - bufj : bufj);
-      }
-    }
-    setTimePoint("NoisyVoleSender.done");
+                for (u64 j = 0; j < (u64)z.size(); ++j) 
+                {
+                    F bufj = TypeTrait::fromBlock(prng.mBuffer[j]);
+                    z[j] = z[j] + (xb[i] ? msg(i, j) - bufj : bufj);
+                }
+            }
+            setTimePoint("NoisyVoleSender.done");
 
-    MC_END();
-  }
+            MC_END();
+        }
 
-};
+    };
 }  // namespace osuCrypto
 
 #endif

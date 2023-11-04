@@ -21,4 +21,4 @@ if(MSVC)
     
 else()
     target_compile_options(libOTe_Tests PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-std=c++${LIBOTE_STD_VER}>)
-endif()
+endif() 

@@ -11,481 +11,481 @@
 namespace osuCrypto::Subfield
 {
 
-using tests_libOTe::eval;
+    using tests_libOTe::eval;
 
-void Subfield_ExConvCode_encode_test(const oc::CLP& cmd)
-{
-  {
-    u64 n = 1024;
-    ExConvCode code;
-    code.config(n / 2, n, 7, 24, true);
-
-    PRNG prng(ZeroBlock);
-    F128 delta = prng.get<F128>();
-    std::vector<F128> y(n), z0(n), z1(n);
-    prng.get(y.data(), y.size());
-    prng.get(z0.data(), z0.size());
-    for (u64 i = 0; i < n; ++i)
+    void Subfield_ExConvCode_encode_test(const oc::CLP& cmd)
     {
-      z1[i] = z0[i] + delta * y[i];
+        {
+            u64 n = 1024;
+            ExConvCode code;
+            code.config(n / 2, n, 7, 24, true);
+
+            PRNG prng(ZeroBlock);
+            F128 delta = prng.get<F128>();
+            std::vector<F128> y(n), z0(n), z1(n);
+            prng.get(y.data(), y.size());
+            prng.get(z0.data(), z0.size());
+            for (u64 i = 0; i < n; ++i)
+            {
+                z1[i] = z0[i] + delta * y[i];
+            }
+
+            static_assert(std::is_trivial<F128>::value);
+
+            code.dualEncode<F128>(z1);
+            code.dualEncode<F128>(z0);
+            code.dualEncode<F128>(y);
+
+            for (u64 i = 0; i < n; ++i)
+            {
+                F128 left = delta * y[i];
+                F128 right = z1[i] - z0[i];
+                if (left != right)
+                    throw RTE_LOC;
+            }
+        }
+
+        //{
+        //    u64 n = 1024;
+        //    ExConvCode code;
+        //    code.config(n / 2, n, 7, 24, true);
+
+        //    PRNG prng(ZeroBlock);
+        //    u128 delta = fromBlock(prng.get<block>());
+        //    std::vector<u128> y(n), z0(n), z1(n);
+        //    prng.get(y.data(), y.size());
+        //    prng.get(z0.data(), z0.size());
+        //    for (u64 i = 0; i < n; ++i)
+        //    {
+        //        z1[i] = z0[i] + delta * y[i];
+        //    }
+
+        //    code.dualEncode<u128>(z1);
+        //    code.dualEncode2<u128, u128>(z0, y);
+
+        //    for (u64 i = 0; i < n; ++i)
+        //    {
+        //        u128 left = delta * y[i];
+        //        u128 right = z1[i] - z0[i];
+        //        if (left != right)
+        //            throw RTE_LOC;
+        //    }
+        //}
+
+        {
+            u64 n = 1024;
+            ExConvCode code;
+            code.config(n / 2, n, 7, 24, true);
+
+            PRNG prng(ZeroBlock);
+            u8 delta = 111;
+            std::vector<u8> y(n), z0(n), z1(n);
+            prng.get(y.data(), y.size());
+            prng.get(z0.data(), z0.size());
+            for (u64 i = 0; i < n; ++i)
+            {
+                z1[i] = z0[i] + delta * y[i];
+            }
+
+            code.dualEncode<u8>(z1);
+            code.dualEncode2<u8, u8>(z0, y);
+
+            for (u64 i = 0; i < n; ++i)
+            {
+                u8 left = delta * y[i];
+                u8 right = z1[i] - z0[i];
+                if (left != right)
+                    throw RTE_LOC;
+            }
+        }
+
+        {
+            u64 n = 1024;
+            ExConvCode code;
+            code.config(n / 2, n, 7, 24, true);
+
+            PRNG prng(ZeroBlock);
+            u64 delta = 111;
+            std::vector<u64> y(n), z0(n), z1(n);
+            prng.get(y.data(), y.size());
+            prng.get(z0.data(), z0.size());
+            for (u64 i = 0; i < n; ++i)
+            {
+                z1[i] = z0[i] + delta * y[i];
+            }
+
+            code.dualEncode<u64>(z1);
+            code.dualEncode2<u64, u64>(z0, y);
+
+            for (u64 i = 0; i < n; ++i)
+            {
+                u64 left = delta * y[i];
+                u64 right = z1[i] - z0[i];
+                if (left != right)
+                    throw RTE_LOC;
+            }
+        }
     }
 
-    assert(std::is_trivial<F128>::value);
-
-    code.dualEncode<F128>(z1);
-    code.dualEncode<F128>(z0);
-    code.dualEncode<F128>(y);
-
-    for (u64 i = 0; i < n; ++i)
-    {
-      F128 left = delta * y[i];
-      F128 right = z1[i] - z0[i];
-      if (left != right)
-        throw RTE_LOC;
-    }
-  }
-
-  {
-    u64 n = 1024;
-    ExConvCode code;
-    code.config(n / 2, n, 7, 24, true);
-
-    PRNG prng(ZeroBlock);
-    u128 delta = fromBlock(prng.get<block>());
-    std::vector<u128> y(n), z0(n), z1(n);
-    prng.get(y.data(), y.size());
-    prng.get(z0.data(), z0.size());
-    for (u64 i = 0; i < n; ++i)
-    {
-      z1[i] = z0[i] + delta * y[i];
-    }
-
-    code.dualEncode<u128>(z1);
-    code.dualEncode2<u128, u128>(z0, y);
-
-    for (u64 i = 0; i < n; ++i)
-    {
-      u128 left = delta * y[i];
-      u128 right = z1[i] - z0[i];
-      if (left != right)
-        throw RTE_LOC;
-    }
-  }
-
-  {
-    u64 n = 1024;
-    ExConvCode code;
-    code.config(n / 2, n, 7, 24, true);
-
-    PRNG prng(ZeroBlock);
-    u8 delta = 111;
-    std::vector<u8> y(n), z0(n), z1(n);
-    prng.get(y.data(), y.size());
-    prng.get(z0.data(), z0.size());
-    for (u64 i = 0; i < n; ++i)
-    {
-      z1[i] = z0[i] + delta * y[i];
-    }
-
-    code.dualEncode<u8>(z1);
-    code.dualEncode2<u8, u8>(z0, y);
-
-    for (u64 i = 0; i < n; ++i)
-    {
-      u8 left = delta * y[i];
-      u8 right = z1[i] - z0[i];
-      if (left != right)
-        throw RTE_LOC;
-    }
-  }
-
-  {
-    u64 n = 1024;
-    ExConvCode code;
-    code.config(n / 2, n, 7, 24, true);
-
-    PRNG prng(ZeroBlock);
-    u64 delta = 111;
-    std::vector<u64> y(n), z0(n), z1(n);
-    prng.get(y.data(), y.size());
-    prng.get(z0.data(), z0.size());
-    for (u64 i = 0; i < n; ++i)
-    {
-      z1[i] = z0[i] + delta * y[i];
-    }
-
-    code.dualEncode<u64>(z1);
-    code.dualEncode2<u64, u64>(z0, y);
-
-    for (u64 i = 0; i < n; ++i)
-    {
-      u64 left = delta * y[i];
-      u64 right = z1[i] - z0[i];
-      if (left != right)
-        throw RTE_LOC;
-    }
-  }
-}
-
-void Subfield_Tools_Pprf_test(const oc::CLP& cmd) {
+    void Subfield_Tools_Pprf_test(const oc::CLP& cmd) {
 #if defined(ENABLE_SILENTOT) || defined(ENABLE_SILENT_VOLE)
 
-  {
-    u64 domain = cmd.getOr("d", 16);
-    auto threads = cmd.getOr("t", 1);
-    u64 numPoints = cmd.getOr("s", 1) * 8;
+        //{
+        //    u64 domain = cmd.getOr("d", 16);
+        //    auto threads = cmd.getOr("t", 1);
+        //    u64 numPoints = cmd.getOr("s", 1) * 8;
 
-    PRNG prng(ZeroBlock);
+        //    PRNG prng(ZeroBlock);
 
-    auto sockets = cp::LocalAsyncSocket::makePair();
+        //    auto sockets = cp::LocalAsyncSocket::makePair();
 
-    auto format = PprfOutputFormat::Interleaved;
-    SilentSubfieldPprfSender<TypeTrait128> sender;
-    SilentSubfieldPprfReceiver<TypeTrait128> recver;
+        //    auto format = PprfOutputFormat::Interleaved;
+        //    SilentSubfieldPprfSender<TypeTrait128> sender;
+        //    SilentSubfieldPprfReceiver<TypeTrait128> recver;
 
-    sender.configure(domain, numPoints);
-    recver.configure(domain, numPoints);
+        //    sender.configure(domain, numPoints);
+        //    recver.configure(domain, numPoints);
 
-    auto numOTs = sender.baseOtCount();
-    std::vector<std::array<block, 2>> sendOTs(numOTs);
-    std::vector<block> recvOTs(numOTs);
-    BitVector recvBits = recver.sampleChoiceBits(domain * numPoints, format, prng);
-    //recvBits.randomize(prng);
+        //    auto numOTs = sender.baseOtCount();
+        //    std::vector<std::array<block, 2>> sendOTs(numOTs);
+        //    std::vector<block> recvOTs(numOTs);
+        //    BitVector recvBits = recver.sampleChoiceBits(domain * numPoints, format, prng);
+        //    //recvBits.randomize(prng);
 
-    //recvBits[16] = 1;
-    prng.get(sendOTs.data(), sendOTs.size());
-    for (u64 i = 0; i < numOTs; ++i) {
-      //recvBits[i] = 0;
-      recvOTs[i] = sendOTs[i][recvBits[i]];
-    }
-    sender.setBase(sendOTs);
-    recver.setBase(recvOTs);
+        //    //recvBits[16] = 1;
+        //    prng.get(sendOTs.data(), sendOTs.size());
+        //    for (u64 i = 0; i < numOTs; ++i) {
+        //        //recvBits[i] = 0;
+        //        recvOTs[i] = sendOTs[i][recvBits[i]];
+        //    }
+        //    sender.setBase(sendOTs);
+        //    recver.setBase(recvOTs);
 
-    //auto cols = (numPoints * domain + 127) / 128;
-    Matrix<u128> sOut2(numPoints * domain, 1);
-    Matrix<u128> rOut2(numPoints * domain, 1);
-    std::vector<u64> points(numPoints);
-    recver.getPoints(points, format);
+        //    //auto cols = (numPoints * domain + 127) / 128;
+        //    Matrix<u128> sOut2(numPoints * domain, 1);
+        //    Matrix<u128> rOut2(numPoints * domain, 1);
+        //    std::vector<u64> points(numPoints);
+        //    recver.getPoints(points, format);
 
-    std::vector<u128> arr(numPoints);
-    prng.get(arr.data(), arr.size());
-    auto p0 = sender.expand(sockets[0], arr, prng, sOut2, format, true, threads);
-    auto p1 = recver.expand(sockets[1], prng, rOut2, format, true, threads);
+        //    std::vector<u128> arr(numPoints);
+        //    prng.get(arr.data(), arr.size());
+        //    auto p0 = sender.expand(sockets[0], arr, prng, sOut2, format, true, threads);
+        //    auto p1 = recver.expand(sockets[1], prng, rOut2, format, true, threads);
 
-    eval(p0, p1);
-    for (u64 i = 0; i < numPoints; i++) {
-      u64 point = points[i];
-      auto exp = sOut2(point) + arr[i];
-      if (exp != rOut2(point)) {
-        throw RTE_LOC;
-      }
-    }
-  }
+        //    eval(p0, p1);
+        //    for (u64 i = 0; i < numPoints; i++) {
+        //        u64 point = points[i];
+        //        auto exp = sOut2(point) + arr[i];
+        //        if (exp != rOut2(point)) {
+        //            throw RTE_LOC;
+        //        }
+        //    }
+        //}
 
 #else
-  throw UnitTestSkipped("ENABLE_SILENTOT not defined.");
+        throw UnitTestSkipped("ENABLE_SILENTOT not defined.");
 #endif
-}
+    }
 
-void Subfield_Noisy_Vole_test(const oc::CLP& cmd) {
-    {
-      Timer timer;
-      timer.setTimePoint("start");
-      u64 n = cmd.getOr("n", 123);
-      block seed = block(0, cmd.getOr("seed", 0));
-      PRNG prng(seed);
+    void Subfield_Noisy_Vole_test(const oc::CLP& cmd) {
+        //{
+        //    Timer timer;
+        //    timer.setTimePoint("start");
+        //    u64 n = cmd.getOr("n", 123);
+        //    block seed = block(0, cmd.getOr("seed", 0));
+        //    PRNG prng(seed);
 
-      u128 x = prng.get();
-      std::vector<u128> y(n);
-      std::vector<u128> z0(n), z1(n);
-      prng.get(y.data(), y.size());
+        //    u128 x = prng.get();
+        //    std::vector<u128> y(n);
+        //    std::vector<u128> z0(n), z1(n);
+        //    prng.get(y.data(), y.size());
 
-      NoisySubfieldVoleReceiver<TypeTrait128> recv;
-      NoisySubfieldVoleSender<TypeTrait128> send;
+        //    NoisySubfieldVoleReceiver<TypeTrait128> recv;
+        //    NoisySubfieldVoleSender<TypeTrait128> send;
 
-      recv.setTimer(timer);
-      send.setTimer(timer);
+        //    recv.setTimer(timer);
+        //    send.setTimer(timer);
 
-      auto chls = cp::LocalAsyncSocket::makePair();
-      timer.setTimePoint("net");
+        //    auto chls = cp::LocalAsyncSocket::makePair();
+        //    timer.setTimePoint("net");
 
 
-      BitVector recvChoice((u8*)&x, 128);
-      std::vector<block> otRecvMsg(128);
-      std::vector<std::array<block, 2>> otSendMsg(128);
-      prng.get<std::array<block, 2>>(otSendMsg);
-      for (u64 i = 0; i < 128; ++i)
-        otRecvMsg[i] = otSendMsg[i][recvChoice[i]];
-      timer.setTimePoint("ot");
+        //    BitVector recvChoice((u8*)&x, 128);
+        //    std::vector<block> otRecvMsg(128);
+        //    std::vector<std::array<block, 2>> otSendMsg(128);
+        //    prng.get<std::array<block, 2>>(otSendMsg);
+        //    for (u64 i = 0; i < 128; ++i)
+        //        otRecvMsg[i] = otSendMsg[i][recvChoice[i]];
+        //    timer.setTimePoint("ot");
 
-      auto p0 = recv.receive(y, z0, prng, otSendMsg, chls[0]);
-      auto p1 = send.send(x, z1, prng, otRecvMsg, chls[1]);
+        //    auto p0 = recv.receive(y, z0, prng, otSendMsg, chls[0]);
+        //    auto p1 = send.send(x, z1, prng, otRecvMsg, chls[1]);
 
-      eval(p0, p1);
+        //    eval(p0, p1);
 
-      for (u64 i = 0; i < n; ++i)
-      {
-        if (x * y[i] != (z1[i] - z0[i]))
+        //    for (u64 i = 0; i < n; ++i)
+        //    {
+        //        if (x * y[i] != (z1[i] - z0[i]))
+        //        {
+        //            throw RTE_LOC;
+        //        }
+        //    }
+        //    timer.setTimePoint("done");
+
+        //    //std::cout << timer << std::endl;
+        //}
+
         {
-          throw RTE_LOC;
+            Timer timer;
+            timer.setTimePoint("start");
+            u64 n = cmd.getOr("n", 123);
+            block seed = block(0, cmd.getOr("seed", 0));
+            PRNG prng(seed);
+
+            u64 x = prng.get();
+            std::vector<u64> y(n);
+            std::vector<u64> z0(n), z1(n);
+            prng.get(y.data(), y.size());
+
+            NoisySubfieldVoleReceiver<TypeTrait64> recv;
+            NoisySubfieldVoleSender<TypeTrait64> send;
+
+            recv.setTimer(timer);
+            send.setTimer(timer);
+
+            auto chls = cp::LocalAsyncSocket::makePair();
+            timer.setTimePoint("net");
+
+            BitVector recvChoice((u8*)&x, 64);
+            std::vector<block> otRecvMsg(64);
+            std::vector<std::array<block, 2>> otSendMsg(64);
+            prng.get<std::array<block, 2>>(otSendMsg);
+            for (u64 i = 0; i < 64; ++i)
+                otRecvMsg[i] = otSendMsg[i][recvChoice[i]];
+            timer.setTimePoint("ot");
+
+            auto p0 = recv.receive(y, z0, prng, otSendMsg, chls[0]);
+            auto p1 = send.send(x, z1, prng, otRecvMsg, chls[1]);
+
+            eval(p0, p1);
+
+            for (u64 i = 0; i < n; ++i)
+            {
+                if (x * y[i] != (z1[i] - z0[i]))
+                {
+                    throw RTE_LOC;
+                }
+            }
+            timer.setTimePoint("done");
+
+            //std::cout << timer << std::endl;
         }
-      }
-      timer.setTimePoint("done");
 
-      //std::cout << timer << std::endl;
-    }
-
-    {
-      Timer timer;
-      timer.setTimePoint("start");
-      u64 n = cmd.getOr("n", 123);
-      block seed = block(0, cmd.getOr("seed", 0));
-      PRNG prng(seed);
-
-      u64 x = prng.get();
-      std::vector<u64> y(n);
-      std::vector<u64> z0(n), z1(n);
-      prng.get(y.data(), y.size());
-
-      NoisySubfieldVoleReceiver<TypeTrait64> recv;
-      NoisySubfieldVoleSender<TypeTrait64> send;
-
-      recv.setTimer(timer);
-      send.setTimer(timer);
-
-      auto chls = cp::LocalAsyncSocket::makePair();
-      timer.setTimePoint("net");
-
-      BitVector recvChoice((u8*)&x, 64);
-      std::vector<block> otRecvMsg(64);
-      std::vector<std::array<block, 2>> otSendMsg(64);
-      prng.get<std::array<block, 2>>(otSendMsg);
-      for (u64 i = 0; i < 64; ++i)
-        otRecvMsg[i] = otSendMsg[i][recvChoice[i]];
-      timer.setTimePoint("ot");
-
-      auto p0 = recv.receive(y, z0, prng, otSendMsg, chls[0]);
-      auto p1 = send.send(x, z1, prng, otRecvMsg, chls[1]);
-
-      eval(p0, p1);
-
-      for (u64 i = 0; i < n; ++i)
-      {
-        if (x * y[i] != (z1[i] - z0[i]))
         {
-          throw RTE_LOC;
-        }
-      }
-      timer.setTimePoint("done");
+            Timer timer;
+            timer.setTimePoint("start");
+            u64 n = cmd.getOr("n", 400);
+            block seed = block(0, cmd.getOr("seed", 0));
+            PRNG prng(seed);
 
-      //std::cout << timer << std::endl;
+            constexpr size_t N = 3;
+            using TypeTrait = TypeTraitVec<u32, N>;
+            u64 bitsF = TypeTrait::bitsF;
+            using F = TypeTrait::F;
+            using G = TypeTrait::G;
+
+            F x = TypeTrait::fromBlock(prng.get<block>());
+            std::vector<G> y(n);
+            std::vector<F> z0(n), z1(n);
+            prng.get(y.data(), y.size());
+
+            NoisySubfieldVoleReceiver<TypeTrait> recv;
+            NoisySubfieldVoleSender<TypeTrait> send;
+
+            recv.setTimer(timer);
+            send.setTimer(timer);
+
+            auto chls = cp::LocalAsyncSocket::makePair();
+            timer.setTimePoint("net");
+
+            BitVector recvChoice((u8*)&x, bitsF);
+            std::vector<block> otRecvMsg(bitsF);
+            std::vector<std::array<block, 2>> otSendMsg(bitsF);
+            prng.get<std::array<block, 2>>(otSendMsg);
+            for (u64 i = 0; i < bitsF; ++i)
+                otRecvMsg[i] = otSendMsg[i][recvChoice[i]];
+            timer.setTimePoint("ot");
+
+            auto p0 = recv.receive(y, z0, prng, otSendMsg, chls[0]);
+            auto p1 = send.send(x, z1, prng, otRecvMsg, chls[1]);
+
+            eval(p0, p1);
+            //      std::cout << "transferred " << (chls[0].bytesSent() + chls[0].bytesReceived()) << std::endl;
+            timer.setTimePoint("verify");
+
+            for (u64 i = 0; i < n; ++i)
+            {
+                for (u64 j = 0; j < N; j++) {
+                    G left = x[j] * y[i];
+                    G right = z1[i][j] - z0[i][j];
+                    if (left != right)
+                    {
+                        throw RTE_LOC;
+                    }
+                }
+            }
+            timer.setTimePoint("done");
+
+            //      std::cout << timer << std::endl;
+        }
     }
 
-    {
-      Timer timer;
-      timer.setTimePoint("start");
-      u64 n = cmd.getOr("n", 400);
-      block seed = block(0, cmd.getOr("seed", 0));
-      PRNG prng(seed);
-
-      constexpr size_t N = 10;
-      using TypeTrait = TypeTraitVec<u32, N>;
-      u64 bitsF = TypeTrait::bitsF;
-      using F = TypeTrait::F;
-      using G = TypeTrait::G;
-
-      F x = TypeTrait::fromBlock(prng.get<block>());
-      std::vector<G> y(n);
-      std::vector<F> z0(n), z1(n);
-      prng.get(y.data(), y.size());
-
-      NoisySubfieldVoleReceiver<TypeTrait> recv;
-      NoisySubfieldVoleSender<TypeTrait> send;
-
-      recv.setTimer(timer);
-      send.setTimer(timer);
-
-      auto chls = cp::LocalAsyncSocket::makePair();
-      timer.setTimePoint("net");
-
-      BitVector recvChoice((u8*)&x, bitsF);
-      std::vector<block> otRecvMsg(bitsF);
-      std::vector<std::array<block, 2>> otSendMsg(bitsF);
-      prng.get<std::array<block, 2>>(otSendMsg);
-      for (u64 i = 0; i < bitsF; ++i)
-        otRecvMsg[i] = otSendMsg[i][recvChoice[i]];
-      timer.setTimePoint("ot");
-
-      auto p0 = recv.receive(y, z0, prng, otSendMsg, chls[0]);
-      auto p1 = send.send(x, z1, prng, otRecvMsg, chls[1]);
-
-      eval(p0, p1);
-//      std::cout << "transferred " << (chls[0].bytesSent() + chls[0].bytesReceived()) << std::endl;
-      timer.setTimePoint("verify");
-
-      for (u64 i = 0; i < n; ++i)
-      {
-        for (u64 j = 0; j < N; j++) {
-          G left = x[j] * y[i];
-          G right = z1[i][j] - z0[i][j];
-          if (left != right)
-          {
-            throw RTE_LOC;
-          }
-        }
-      }
-      timer.setTimePoint("done");
-
-//      std::cout << timer << std::endl;
-    }
-}
-
-void Subfield_Silent_Vole_test(const oc::CLP& cmd) {
-  using namespace oc::Subfield;
+    void Subfield_Silent_Vole_test(const oc::CLP& cmd) {
+        using namespace oc::Subfield;
 #if defined(ENABLE_SILENTOT)
-  Timer timer;
-  timer.setTimePoint("start");
-  u64 n = cmd.getOr("n", 102043);
-  u64 nt = cmd.getOr("nt", std::thread::hardware_concurrency());
-  block seed = block(0, cmd.getOr("seed", 0));
+        Timer timer;
+        timer.setTimePoint("start");
+        u64 n = cmd.getOr("n", 102043);
+        u64 nt = cmd.getOr("nt", std::thread::hardware_concurrency());
+        block seed = block(0, cmd.getOr("seed", 0));
 
-  {
-    PRNG prng(seed);
-    u128 x = TypeTrait128::fromBlock(prng.get<block>());
-    std::vector<u128> c(n), z0(n), z1(n);
+        //{
+        //    PRNG prng(seed);
+        //    u128 x = TypeTrait128::fromBlock(prng.get<block>());
+        //    std::vector<u128> c(n), z0(n), z1(n);
 
-    SilentSubfieldVoleReceiver<TypeTrait128> recv;
-    SilentSubfieldVoleSender<TypeTrait128> send;
+        //    SilentSubfieldVoleReceiver<TypeTrait128> recv;
+        //    SilentSubfieldVoleSender<TypeTrait128> send;
 
-    recv.mMultType = MultType::ExConv7x24;
-    send.mMultType = MultType::ExConv7x24;
+        //    recv.mMultType = MultType::ExConv7x24;
+        //    send.mMultType = MultType::ExConv7x24;
 
-    recv.setTimer(timer);
-    send.setTimer(timer);
+        //    recv.setTimer(timer);
+        //    send.setTimer(timer);
 
-    recv.mDebug = true;
-    send.mDebug = true;
+        //    recv.mDebug = true;
+        //    send.mDebug = true;
 
-    auto chls = cp::LocalAsyncSocket::makePair();
+        //    auto chls = cp::LocalAsyncSocket::makePair();
 
-    timer.setTimePoint("net");
+        //    timer.setTimePoint("net");
 
-    timer.setTimePoint("ot");
-//  fakeBase(n, nt, prng, x, recv, send);
+        //    timer.setTimePoint("ot");
+        //    //  fakeBase(n, nt, prng, x, recv, send);
 
-    auto p0 = send.silentSend(x, span<u128>(z0), prng, chls[0]);
-    auto p1 = recv.silentReceive(span<u128>(c), span<u128>(z1), prng, chls[1]);
+        //    auto p0 = send.silentSend(x, span<u128>(z0), prng, chls[0]);
+        //    auto p1 = recv.silentReceive(span<u128>(c), span<u128>(z1), prng, chls[1]);
 
-    eval(p0, p1);
-    timer.setTimePoint("send");
-    for (u64 i = 0; i < n; ++i) {
-      u128 left = c[i] * x;
-      u128 right = z1[i] - z0[i];
-      if (left != right) {
-        std::cout << "bad " << i << "\n  c[i] " << u128ToString(c[i]) << " * x " << u128ToString(x) << " = "
-                  << u128ToString(left) << std::endl;
-        std::cout << "z0[i] " << u128ToString(z0[i]) << " ^ z1 " << u128ToString(z1[i]) << " = "
-                  << u128ToString(right) << std::endl;
-        throw RTE_LOC;
-      }
-    }
-  }
+        //    eval(p0, p1);
+        //    timer.setTimePoint("send");
+        //    for (u64 i = 0; i < n; ++i) {
+        //        u128 left = c[i] * x;
+        //        u128 right = z1[i] - z0[i];
+        //        if (left != right) {
+        //            std::cout << "bad " << i << "\n  c[i] " << u128ToString(c[i]) << " * x " << u128ToString(x) << " = "
+        //                << u128ToString(left) << std::endl;
+        //            std::cout << "z0[i] " << u128ToString(z0[i]) << " ^ z1 " << u128ToString(z1[i]) << " = "
+        //                << u128ToString(right) << std::endl;
+        //            throw RTE_LOC;
+        //        }
+        //    }
+        //}
 
-  {
-    PRNG prng(seed);
-    u64 x = TypeTrait128::fromBlock(prng.get<block>());
-    std::vector<u64> c(n), z0(n), z1(n);
+        //{
+        //    PRNG prng(seed);
+        //    u64 x = TypeTrait128::fromBlock(prng.get<block>());
+        //    std::vector<u64> c(n), z0(n), z1(n);
 
-    SilentSubfieldVoleReceiver<TypeTrait64> recv;
-    SilentSubfieldVoleSender<TypeTrait64> send;
+        //    SilentSubfieldVoleReceiver<TypeTrait64> recv;
+        //    SilentSubfieldVoleSender<TypeTrait64> send;
 
-    recv.mMultType = MultType::ExConv7x24;
-    send.mMultType = MultType::ExConv7x24;
+        //    recv.mMultType = MultType::ExConv7x24;
+        //    send.mMultType = MultType::ExConv7x24;
 
-    recv.setTimer(timer);
-    send.setTimer(timer);
+        //    recv.setTimer(timer);
+        //    send.setTimer(timer);
 
-    recv.mDebug = true;
-    send.mDebug = true;
+        //    recv.mDebug = true;
+        //    send.mDebug = true;
 
-    auto chls = cp::LocalAsyncSocket::makePair();
+        //    auto chls = cp::LocalAsyncSocket::makePair();
 
-    timer.setTimePoint("net");
+        //    timer.setTimePoint("net");
 
-    timer.setTimePoint("ot");
-//  fakeBase(n, nt, prng, x, recv, send);
+        //    timer.setTimePoint("ot");
+        //    //  fakeBase(n, nt, prng, x, recv, send);
 
-    auto p0 = send.silentSend(x, span<u64>(z0), prng, chls[0]);
-    auto p1 = recv.silentReceive(span<u64>(c), span<u64>(z1), prng, chls[1]);
+        //    auto p0 = send.silentSend(x, span<u64>(z0), prng, chls[0]);
+        //    auto p1 = recv.silentReceive(span<u64>(c), span<u64>(z1), prng, chls[1]);
 
-    eval(p0, p1);
-    timer.setTimePoint("send");
-    for (u64 i = 0; i < n; ++i) {
-      u64 left = c[i] * x;
-      u64 right = z1[i] - z0[i];
-      if (left != right) {
-        std::cout << "bad " << i << "\n  c[i] " << c[i] << " * x " << x << " = " << left << std::endl;
-        std::cout << "z0[i] " << z0[i] << " - z1 " << z1[i] << " = " << right << std::endl;
-        throw RTE_LOC;
-      }
-    }
-  }
+        //    eval(p0, p1);
+        //    timer.setTimePoint("send");
+        //    for (u64 i = 0; i < n; ++i) {
+        //        u64 left = c[i] * x;
+        //        u64 right = z1[i] - z0[i];
+        //        if (left != right) {
+        //            std::cout << "bad " << i << "\n  c[i] " << c[i] << " * x " << x << " = " << left << std::endl;
+        //            std::cout << "z0[i] " << z0[i] << " - z1 " << z1[i] << " = " << right << std::endl;
+        //            throw RTE_LOC;
+        //        }
+        //    }
+        //}
 
-  {
-    PRNG prng(seed);
-    constexpr size_t N = 10;
-    using TypeTrait = TypeTraitVec<u32, N>;
-    using F = TypeTrait::F;
-    using G = TypeTrait::G;
-    F x = TypeTrait::fromBlock(prng.get<block>());
-    std::vector<G> c(n);
-    std::vector<F> z0(n), z1(n);
+        {
+            PRNG prng(seed);
+            constexpr size_t N = 10;
+            using TypeTrait = TypeTraitVec<u32, N>;
+            using F = TypeTrait::F;
+            using G = TypeTrait::G;
+            F x = TypeTrait::fromBlock(prng.get<block>());
+            std::vector<G> c(n);
+            std::vector<F> z0(n), z1(n);
 
-    SilentSubfieldVoleReceiver<TypeTrait> recv;
-    SilentSubfieldVoleSender<TypeTrait> send;
+            SilentSubfieldVoleReceiver<TypeTrait> recv;
+            SilentSubfieldVoleSender<TypeTrait> send;
 
-    recv.mMultType = MultType::ExConv7x24;
-    send.mMultType = MultType::ExConv7x24;
+            recv.mMultType = MultType::ExConv7x24;
+            send.mMultType = MultType::ExConv7x24;
 
-    recv.setTimer(timer);
-    send.setTimer(timer);
+            recv.setTimer(timer);
+            send.setTimer(timer);
 
-//    recv.mDebug = true;
-//    send.mDebug = true;
+            //    recv.mDebug = true;
+            //    send.mDebug = true;
 
-    auto chls = cp::LocalAsyncSocket::makePair();
+            auto chls = cp::LocalAsyncSocket::makePair();
 
-    timer.setTimePoint("net");
+            timer.setTimePoint("net");
 
-    timer.setTimePoint("ot");
-//  fakeBase(n, nt, prng, x, recv, send);
+            timer.setTimePoint("ot");
+            //  fakeBase(n, nt, prng, x, recv, send);
 
-    auto p0 = send.silentSend(x, span<F>(z0), prng, chls[0]);
-    auto p1 = recv.silentReceive(span<G>(c), span<F>(z1), prng, chls[1]);
+            auto p0 = send.silentSend(x, span<F>(z0), prng, chls[0]);
+            auto p1 = recv.silentReceive(span<G>(c), span<F>(z1), prng, chls[1]);
 
-    eval(p0, p1);
-//    std::cout << "transferred " << (chls[0].bytesSent() + chls[0].bytesReceived()) << std::endl;
-    timer.setTimePoint("verify");
+            eval(p0, p1);
+            //    std::cout << "transferred " << (chls[0].bytesSent() + chls[0].bytesReceived()) << std::endl;
+            timer.setTimePoint("verify");
 
-    timer.setTimePoint("send");
-    for (u64 i = 0; i < n; i++) {
-      for (u64 j = 0; j < N; j++) {
-        G left = c[i] * x[j];
-        G right = z1[i][j] - z0[i][j];
-        if (left != right) {
-          std::cout << "bad " << i << "\n  c[i] " << c[i] << " * x[j] " << x[j] << " = " << left << std::endl;
-          std::cout << "z0[i][j] " << z0[i][j] << " - z1 " << z1[i][j] << " = " << right << std::endl;
-          throw RTE_LOC;
+            timer.setTimePoint("send");
+            for (u64 i = 0; i < n; i++) {
+                for (u64 j = 0; j < N; j++) {
+                    G left = c[i] * x[j];
+                    G right = z1[i][j] - z0[i][j];
+                    if (left != right) {
+                        std::cout << "bad " << i << "\n  c[i] " << c[i] << " * x[j] " << x[j] << " = " << left << std::endl;
+                        std::cout << "z0[i][j] " << z0[i][j] << " - z1 " << z1[i][j] << " = " << right << std::endl;
+                        throw RTE_LOC;
+                    }
+                }
+            }
         }
-      }
-    }
-  }
 
-  timer.setTimePoint("done");
-//  std::cout << timer << std::endl;
+        timer.setTimePoint("done");
+        //  std::cout << timer << std::endl;
 #else
-  throw UnitTestSkipped("not defined." LOCATION);
+        throw UnitTestSkipped("not defined." LOCATION);
 #endif
-}
+    }
 
 }

@@ -8,10 +8,11 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "FETCH_AUTO": true,
         "ENABLE_ALL_OT": true,
-        "ENABLE_SSE": false,
-        "ENABLE_AVX": false,
+        "ENABLE_SSE": true,
+        "ENABLE_AVX": true,
         "ENABLE_BITPOLYMUL": false,
         "LIBOTE_STD_VER": "17",
         "CMAKE_PREFIX_PATH": "${sourceDir}/../out/install",
@@ -51,7 +52,7 @@
         "VERBOSE_FETCH": true,
         "ENABLE_SSE": true,
         "ENABLE_AVX": true,
-        "ENABLE_ASAN": true,
+        "ENABLE_ASAN": false,
         "COPROTO_ENABLE_BOOST": true,
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
         "CMAKE_PREFIX_PATH": "${sourceDir}/../out/install/${presetName}"
