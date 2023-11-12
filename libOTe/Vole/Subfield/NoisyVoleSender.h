@@ -57,6 +57,15 @@ class NoisySubfieldVoleSender : public TimerAdapter {
   }
 
   task<> send(F x, span<F> z, PRNG& _,
+              span<block> otMsg, Socket& chl) {
+    if constexpr (!std::is_same_v<F, G> && sizeof(F) > 16) {
+      return send1(x, z, _, otMsg, chl);
+    } else {
+      return send0(x, z, _, otMsg, chl);
+    }
+  }
+
+  task<> send0(F x, span<F> z, PRNG& _,
                                span<block> otMsg, Socket& chl) {
     MC_BEGIN(task<>, this, x, z, prng = std::move(PRNG{}), otMsg, &chl, msg = Matrix<F>{},
              xb = BitVector{});
@@ -85,6 +94,35 @@ class NoisySubfieldVoleSender : public TimerAdapter {
     MC_END();
   }
 
+  task<> send1(F x, span<F> z, PRNG& _,
+               span<block> otMsg, Socket& chl) {
+    MC_BEGIN(task<>, this, x, z, prng = std::move(PRNG{}), otMsg, &chl, msg = Matrix<G>{},
+             xb = BitVector{}, N = TypeTrait::size, k = (size_t)0);
+
+    if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
+    setTimePoint("NoisyVoleSender.main");
+
+    memset(z.data(), 0, sizeof(F) * z.size());
+
+    msg.resize(N * sizeof(G) * 8, z.size(), AllocType::Uninitialized);
+    MC_AWAIT(chl.recv(msg));
+
+    for (; k < N; k++) {
+      setTimePoint("NoisyVoleSender.recvMsg");
+
+      xb = BitVector((u8 *) &(x[k]), sizeof(G) * 8);
+      for (size_t i = 0; i < sizeof(G) * 8; ++i) {
+        prng.SetSeed(otMsg[k*sizeof(G)*8 + i], 1 + (z.size() * sizeof(G)) / 16);
+        G* buf = (G*)prng.mBuffer.data();
+
+        for (size_t j = 0; j < z.size(); ++j) {
+          z[j][k] = z[j][k] + (xb[i] ? msg(k*sizeof(G)*8 + i, j) - buf[j] : buf[j]);
+        }
+      }
+    }
+    setTimePoint("NoisyVoleSender.done");
+    MC_END();
+  }
 };
 }  // namespace osuCrypto
 

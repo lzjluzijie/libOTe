@@ -57,6 +57,16 @@ class NoisySubfieldVoleReceiver : public TimerAdapter {
   }
 
   task<> receive(span<G> y, span<F> z, PRNG& _,
+                 span<std::array<block, 2>> otMsg,
+                 Socket& chl) {
+    if constexpr (!std::is_same_v<F, G> && sizeof(F) > 16) {
+      return receive1(y, z, _, otMsg, chl);
+    } else {
+      return receive0(y, z, _, otMsg, chl);
+    }
+  }
+
+  task<> receive0(span<G> y, span<F> z, PRNG& _,
                                     span<std::array<block, 2>> otMsg,
                                     Socket& chl) {
     MC_BEGIN(task<>, this, y, z, otMsg, &chl, msg = Matrix<F>{},
@@ -93,7 +103,45 @@ class NoisySubfieldVoleReceiver : public TimerAdapter {
     }
 
     MC_AWAIT(chl.send(std::move(msg)));
-    // chl.asyncSend(std::move(msg));
+    setTimePoint("NoisyVoleReceiver.done");
+
+    MC_END();
+  }
+
+  task<> receive1(span<G> y, span<F> z, PRNG& _,
+                  span<std::array<block, 2>> otMsg,
+                  Socket& chl) {
+    MC_BEGIN(task<>, this, y, z, otMsg, &chl, msg = Matrix<G>{},
+             prng = std::move(PRNG{}),
+             N = TypeTrait::size, k = (size_t)0
+    );
+
+    if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
+    if (y.size() != z.size()) throw RTE_LOC;
+    if (z.size() == 0) throw RTE_LOC;
+
+    setTimePoint("NoisyVoleReceiver.begin");
+    memset(z.data(), 0, sizeof(F) * z.size());
+    msg.resize(N * sizeof(G) * 8, y.size(), AllocType::Uninitialized);
+    for (; k < N; k++) {
+      for (size_t i = 0; i < sizeof(G) * 8; i++) {
+        prng.SetSeed(otMsg[k*sizeof(G)*8 + i][0], 1 + (z.size() * sizeof(G)) / 16);
+        G* buf = (G*)prng.mBuffer.data();
+        for (size_t j = 0; j < y.size(); j++) {
+          z[j][k] = z[j][k] + buf[j];
+          G yy = (1 << i) * y[j];
+
+          msg(k*sizeof(G)*8 + i, j) = yy + buf[j];
+        }
+
+        prng.SetSeed(otMsg[k*sizeof(G)*8 + i][1], 1 + (z.size() * sizeof(G)) / 16);
+        buf = (G*)prng.mBuffer.data();
+        for (size_t j = 0; j < y.size(); j++) {
+          msg(k*sizeof(G)*8 + i, j) = msg(k*sizeof(G)*8 + i, j) + buf[j];
+        }
+      }
+    }
+    MC_AWAIT(chl.send(std::move(msg)));
     setTimePoint("NoisyVoleReceiver.done");
 
     MC_END();

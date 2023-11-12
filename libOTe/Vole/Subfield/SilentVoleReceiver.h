@@ -229,10 +229,10 @@ namespace osuCrypto::Subfield
              }
              else
              {
-               chl2 = chl.fork();
+//               chl2 = chl.fork();
                prng2.SetSeed(prng.get());
                MC_AWAIT(baseOt.receive(choice, msg, prng, chl));
-               MC_AWAIT(nv.receive(noiseVals, noiseDeltaShares, prng2, baseOt, chl2));
+               MC_AWAIT(nv.receive(noiseVals, noiseDeltaShares, prng2, baseOt, chl));
 
 //               MC_AWAIT(
 //                   macoro::when_all_ready(
@@ -500,8 +500,8 @@ namespace osuCrypto::Subfield
                if (isConfigured() == false)
                {
                  // first generate 128 normal base OTs
-                 configure(n, SilentBaseType::BaseExtend);
-//                 configure(n, SilentBaseType::Base);
+//                 configure(n, SilentBaseType::BaseExtend);
+                 configure(n, SilentBaseType::Base);
                }
 
                if (mRequestedNumOTs != n)
