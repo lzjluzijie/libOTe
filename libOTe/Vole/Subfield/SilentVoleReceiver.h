@@ -403,8 +403,8 @@ namespace osuCrypto::Subfield
 
             MC_AWAIT(silentReceiveInplace(c.size(), prng, chl));
 
-            std::memcpy(c.data(), mC.data(), c.size() * sizeof(G));
-            std::memcpy(b.data(), mA.data(), b.size() * sizeof(F));
+            std::memcpy(c.data(), mC.data(), c.size() * TypeTrait::bytesG);
+            std::memcpy(b.data(), mA.data(), b.size() * TypeTrait::bytesF);
             clear();
             MC_END();
         }
@@ -469,7 +469,9 @@ namespace osuCrypto::Subfield
                 if (mGapBaseChoice[g])
                 {
                     cc[g] = noise[g];
-                    aa[g] = gapVals[g] - TypeTrait::fromBlock(AES(mGapOts[g]).ecbEncBlock(ZeroBlock)) - noiseShares[g];
+                    aa[g] = TypeTrait::minus(
+                            TypeTrait::minus(gapVals[g], TypeTrait::fromBlock(AES(mGapOts[g]).ecbEncBlock(ZeroBlock))),
+                            noiseShares[g]);
                 }
                 else
                 {
@@ -494,7 +496,7 @@ namespace osuCrypto::Subfield
             {
                 auto pnt = mS[i];
                 mC[pnt] = mNoiseValues[i];
-                mA[pnt] = mA[pnt] - mNoiseDeltaShare[i];
+                mA[pnt] = TypeTrait::minus(mA[pnt], mNoiseDeltaShare[i]);
             }
 
 
@@ -567,8 +569,8 @@ namespace osuCrypto::Subfield
             MC_AWAIT(chl.recvResize(noiseDeltaShare2));
 
             for (u64 i = 0; i < mA.size(); i++) {
-                F left = delta * mC[i];
-                F right = mA[i] - B[i];
+                F left = TypeTrait::mul(delta, mC[i]);
+                F right = TypeTrait::minus(mA[i], B[i]);
                 if (left != right) {
                     throw RTE_LOC;
                 }

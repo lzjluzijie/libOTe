@@ -170,7 +170,7 @@ namespace osuCrypto::Subfield
 
 
             delta = delta.value_or(TypeTrait::fromBlock(prng.get<block>()));
-            xx.append((u8*)&delta, sizeof(F) * 8);
+            xx = TypeTrait::BitVectorF(*delta);
 
             // compute the correlation for the noisy coordinates.
             noiseDeltaShares.resize(baseVoleCount());
@@ -304,7 +304,7 @@ namespace osuCrypto::Subfield
 
             MC_AWAIT(silentSendInplace(delta, b.size(), prng, chl));
 
-            std::memcpy(b.data(), mB.data(), b.size() * sizeof(F));
+            std::memcpy(b.data(), mB.data(), b.size() * TypeTrait::bytesF);
             clear();
 
             setTimePoint("SilentVoleSender.expand.ldpc.msgCpy");
@@ -368,8 +368,10 @@ namespace osuCrypto::Subfield
             for (u64 i = mNumPartitions * mSizePer, j = 0; i < mN2; ++i, ++j)
             {
                 auto t = TypeTrait::fromBlock(mGapOts[j][0]);
-                auto v = t + mNoiseDeltaShares[mNumPartitions + j];
-                gapVals[j] = TypeTrait::fromBlock(AES(mGapOts[j][1]).ecbEncBlock(ZeroBlock)) + v;
+                auto v = TypeTrait::plus(t, mNoiseDeltaShares[mNumPartitions + j]);
+                gapVals[j] = TypeTrait::plus(
+                        TypeTrait::fromBlock(AES(mGapOts[j][1]).ecbEncBlock(ZeroBlock)),
+                        v);
                 mB[i] = t;
             }
 

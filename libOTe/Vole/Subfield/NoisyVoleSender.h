@@ -43,8 +43,8 @@ namespace osuCrypto::Subfield {
         task<> send(F x, span<F> z, PRNG& prng,
             OtReceiver& ot, Socket& chl) {
             MC_BEGIN(task<>, this, x, z, &prng, &ot, &chl,
-                bv = BitVector((u8*)&x, sizeof(F) * 8),
-                otMsg = AlignedUnVector<block>{ sizeof(F) * 8 });
+                bv = TypeTrait::BitVectorF(x),
+                otMsg = AlignedUnVector<block>{ TypeTrait::bitsF });
 
             setTimePoint("NoisyVoleSender.ot.begin");
 
@@ -63,26 +63,27 @@ namespace osuCrypto::Subfield {
                 msg = Matrix<F>{},
                 xb = BitVector{});
 
-            if (otMsg.size() != sizeof(F) * 8)
+            if (otMsg.size() != TypeTrait::bitsF)
                 throw RTE_LOC;
             setTimePoint("NoisyVoleSender.main");
 
-            memset(z.data(), 0, sizeof(F) * z.size());
+            memset(z.data(), 0, TypeTrait::bytesF * z.size());
             msg.resize(otMsg.size(), z.size(), AllocType::Uninitialized);
 
             MC_AWAIT(chl.recv(msg));
 
             setTimePoint("NoisyVoleSender.recvMsg");
 
-            xb = BitVector((u8*)&x, sizeof(F) * 8);
-            for (u64 i = 0; i < sizeof(F) * 8; ++i)
+            xb = TypeTrait::BitVectorF(x);
+            for (size_t i = 0; i < TypeTrait::bitsF; ++i)
             {
                 prng.SetSeed(otMsg[i], z.size());
 
                 for (u64 j = 0; j < (u64)z.size(); ++j) 
                 {
                     F bufj = TypeTrait::fromBlock(prng.mBuffer[j]);
-                    z[j] = z[j] + (xb[i] ? msg(i, j) - bufj : bufj);
+                    F data = xb[i] ? TypeTrait::minus(msg(i, j), bufj) : bufj;
+                    z[j] = TypeTrait::plus(z[j], data);
                 }
             }
             setTimePoint("NoisyVoleSender.done");

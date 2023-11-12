@@ -514,21 +514,21 @@ namespace osuCrypto::Subfield
                                     auto& realChild = getLastLevel(pprf.mDepth, treeIdx)[childIdx];
                                     auto& lastSum = lastSums[keep];
                                     realChild[0] = TypeTrait::fromBlock(child[0]);
-                                    lastSum[0] = lastSum[0] + realChild[0];
+                                    lastSum[0] = TypeTrait::plus(lastSum[0], realChild[0]);
                                     realChild[1] = TypeTrait::fromBlock(child[1]);
-                                    lastSum[1] = lastSum[1] + realChild[1];
+                                    lastSum[1] = TypeTrait::plus(lastSum[1], realChild[1]);
                                     realChild[2] = TypeTrait::fromBlock(child[2]);
-                                    lastSum[2] = lastSum[2] + realChild[2];
+                                    lastSum[2] = TypeTrait::plus(lastSum[2], realChild[2]);
                                     realChild[3] = TypeTrait::fromBlock(child[3]);
-                                    lastSum[3] = lastSum[3] + realChild[3];
+                                    lastSum[3] = TypeTrait::plus(lastSum[3], realChild[3]);
                                     realChild[4] = TypeTrait::fromBlock(child[4]);
-                                    lastSum[4] = lastSum[4] + realChild[4];
+                                    lastSum[4] = TypeTrait::plus(lastSum[4], realChild[4]);
                                     realChild[5] = TypeTrait::fromBlock(child[5]);
-                                    lastSum[5] = lastSum[5] + realChild[5];
+                                    lastSum[5] = TypeTrait::plus(lastSum[5], realChild[5]);
                                     realChild[6] = TypeTrait::fromBlock(child[6]);
-                                    lastSum[6] = lastSum[6] + realChild[6];
+                                    lastSum[6] = TypeTrait::plus(lastSum[6], realChild[6]);
                                     realChild[7] = TypeTrait::fromBlock(child[7]);
-                                    lastSum[7] = lastSum[7] + realChild[7];
+                                    lastSum[7] = TypeTrait::plus(lastSum[7], realChild[7]);
                                 }
                             }
                         }
@@ -578,9 +578,9 @@ namespace osuCrypto::Subfield
                             // to either be on the left child or right child depending 
                             // on which has the active path.
                             lastOts[j][0] = lastSums[0][j];
-                            lastOts[j][1] = lastSums[1][j] + pprf.mValue[treeIdx + j];
+                            lastOts[j][1] = TypeTrait::plus(lastSums[1][j], pprf.mValue[treeIdx + j]);
                             lastOts[j][2] = lastSums[1][j];
-                            lastOts[j][3] = lastSums[0][j] + pprf.mValue[treeIdx + j];
+                            lastOts[j][3] = TypeTrait::plus(lastSums[0][j], pprf.mValue[treeIdx + j]);
 
                             // We are going to expand the 128 bit OT string
                             // into a 256 bit OT string using AES.
@@ -599,10 +599,10 @@ namespace osuCrypto::Subfield
         #endif							
 
                             // Add the OT masks to the sums and send them over.
-                            lastOts[j][0] = lastOts[j][0] + TypeTrait::fromBlock(masks[0]);
-                            lastOts[j][1] = lastOts[j][1] + TypeTrait::fromBlock(masks[1]);
-                            lastOts[j][2] = lastOts[j][2] + TypeTrait::fromBlock(masks[2]);
-                            lastOts[j][3] = lastOts[j][3] + TypeTrait::fromBlock(masks[3]);
+                            lastOts[j][0] = TypeTrait::plus(lastOts[j][0], TypeTrait::fromBlock(masks[0]));
+                            lastOts[j][1] = TypeTrait::plus(lastOts[j][1], TypeTrait::fromBlock(masks[1]));
+                            lastOts[j][2] = TypeTrait::plus(lastOts[j][2], TypeTrait::fromBlock(masks[2]));
+                            lastOts[j][3] = TypeTrait::plus(lastOts[j][3], TypeTrait::fromBlock(masks[3]));
                             }
 
                         // pprf.setTimePoint("SilentMultiPprfSender.last " + std::to_string(treeIdx));
@@ -1256,21 +1256,21 @@ namespace osuCrypto::Subfield
                                 auto& realChild = getLastLevel(pprf.mDepth, treeIdx)[childIdx];
                                 auto& lastSum = lastSums[keep];
                                 realChild[0] = TypeTrait::fromBlock(child[0]);
-                                lastSum[0] = lastSum[0] + realChild[0];
+                                lastSum[0] = TypeTrait::plus(lastSum[0], realChild[0]);
                                 realChild[1] = TypeTrait::fromBlock(child[1]);
-                                lastSum[1] = lastSum[1] + realChild[1];
+                                lastSum[1] = TypeTrait::plus(lastSum[1], realChild[1]);
                                 realChild[2] = TypeTrait::fromBlock(child[2]);
-                                lastSum[2] = lastSum[2] + realChild[2];
+                                lastSum[2] = TypeTrait::plus(lastSum[2], realChild[2]);
                                 realChild[3] = TypeTrait::fromBlock(child[3]);
-                                lastSum[3] = lastSum[3] + realChild[3];
+                                lastSum[3] = TypeTrait::plus(lastSum[3], realChild[3]);
                                 realChild[4] = TypeTrait::fromBlock(child[4]);
-                                lastSum[4] = lastSum[4] + realChild[4];
+                                lastSum[4] = TypeTrait::plus(lastSum[4], realChild[4]);
                                 realChild[5] = TypeTrait::fromBlock(child[5]);
-                                lastSum[5] = lastSum[5] + realChild[5];
+                                lastSum[5] = TypeTrait::plus(lastSum[5], realChild[5]);
                                 realChild[6] = TypeTrait::fromBlock(child[6]);
-                                lastSum[6] = lastSum[6] + realChild[6];
+                                lastSum[6] = TypeTrait::plus(lastSum[6], realChild[6]);
                                 realChild[7] = TypeTrait::fromBlock(child[7]);
-                                lastSum[7] = lastSum[7] + realChild[7];
+                                lastSum[7] = TypeTrait::plus(lastSum[7], realChild[7]);
                             }
                         }
                     }
@@ -1373,8 +1373,8 @@ namespace osuCrypto::Subfield
                         // the expended (random) OT strings with the lastOts values.
                         auto& ot0 = lastOts[j][2 * notAi + 0];
                         auto& ot1 = lastOts[j][2 * notAi + 1];
-                        ot0 = ot0 - TypeTrait::fromBlock(masks[0]);
-                        ot1 = ot1 - TypeTrait::fromBlock(masks[1]);
+                        ot0 = TypeTrait::minus(ot0, TypeTrait::fromBlock(masks[0]));
+                        ot1 = TypeTrait::minus(ot1, TypeTrait::fromBlock(masks[1]));
 
     #ifdef DEBUG_PRINT_PPRF
                         auto prev = level[inactiveChildIdx][j];
@@ -1385,14 +1385,14 @@ namespace osuCrypto::Subfield
 
                         // Fix the sums we computed previously to not include the
                         // incorrect child values. 
-                        auto inactiveSum = lastSums[notAi][j] - inactiveChild;
-                        auto activeSum = lastSums[notAi ^ 1][j] - activeChild;
+                        auto inactiveSum = TypeTrait::minus(lastSums[notAi][j], inactiveChild);
+                        auto activeSum = TypeTrait::minus(lastSums[notAi ^ 1][j], activeChild);
 
                         // Update the inactive and active child to have to correct 
                         // value by XORing their full sum with out partial sum, which
                         // gives us exactly the value we are missing.
-                        inactiveChild = ot0 - inactiveSum;
-                        activeChild = ot1 - activeSum;
+                        inactiveChild = TypeTrait::minus(ot0, inactiveSum);
+                        activeChild = TypeTrait::minus(ot1, activeSum);
 
     #ifdef DEBUG_PRINT_PPRF
                         auto fLevel1 = getLevel(d + 1, true);

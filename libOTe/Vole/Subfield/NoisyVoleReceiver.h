@@ -43,7 +43,7 @@ namespace osuCrypto::Subfield {
         task<> receive(span<G> y, span<F> z, PRNG& prng,
             OtSender& ot, Socket& chl) {
             MC_BEGIN(task<>, this, y, z, &prng, &ot, &chl,
-                otMsg = AlignedUnVector<std::array<block, 2>>{ sizeof(F) * 8 }); // todo: sizeof(F) * 8
+                otMsg = AlignedUnVector<std::array<block, 2>>{ TypeTrait::bitsF });
 
             setTimePoint("NoisyVoleReceiver.ot.begin");
 
@@ -64,32 +64,32 @@ namespace osuCrypto::Subfield {
                 prng = std::move(PRNG{})
             );
 
-            if (otMsg.size() != sizeof(F) * 8) throw RTE_LOC;
+            if (otMsg.size() != TypeTrait::bitsF) throw RTE_LOC;
             if (y.size() != z.size()) throw RTE_LOC;
             if (z.size() == 0) throw RTE_LOC;
 
             setTimePoint("NoisyVoleReceiver.begin");
 
-            memset(z.data(), 0, sizeof(F) * z.size());
+            memset(z.data(), 0, TypeTrait::bytesF * z.size());
             msg.resize(otMsg.size(), z.size(), AllocType::Uninitialized);
 
-            for (u64 ii = 0; ii < sizeof(F) * 8; ++ii) {
+            for (size_t ii = 0; ii < TypeTrait::bitsF; ++ii) {
                 prng.SetSeed(otMsg[ii][0], z.size());
                 auto& buffer = prng.mBuffer;
                 auto pow = TypeTrait::pow(ii);
-                for (u64 j = 0; j < (u64)y.size(); ++j) {
+                for (size_t j = 0; j < y.size(); ++j) {
                     auto bufj = TypeTrait::fromBlock(buffer[j]);
-                    z[j] = z[j] + bufj;
-                    F yy = pow * y[j];
+                    z[j] = TypeTrait::plus(z[j], bufj);
+                    F yy = TypeTrait::mul(pow, y[j]);
 
-                    msg(ii, j) = yy + bufj;
+                    msg(ii, j) = TypeTrait::plus(yy, bufj);
                 }
 
                 prng.SetSeed(otMsg[ii][1], z.size());
 
-                for (u64 j = 0; j < (u64)y.size(); ++j) {
+                for (size_t j = 0; j < y.size(); ++j) {
                     // enc one message under the OT msg.
-                    msg(ii, j) = msg(ii, j) + TypeTrait::fromBlock(buffer[j]);
+                    msg(ii, j) = TypeTrait::plus(msg(ii, j), TypeTrait::fromBlock(prng.mBuffer[j]));
                 }
             }
 

@@ -1,5 +1,6 @@
 #include "libOTe/Vole/Noisy/NoisyVoleSender.h"
 #include "cryptoTools/Common/BitIterator.h"
+#include "cryptoTools/Common/BitVector.h"
 
 namespace osuCrypto::Subfield {
 
@@ -7,79 +8,106 @@ namespace osuCrypto::Subfield {
         block b;
         F128() = default;
         explicit F128(const block& b) : b(b) {}
-        OC_FORCEINLINE F128 operator+(const F128& rhs) const {
-            F128 ret;
-            ret.b = b ^ rhs.b;
+//        OC_FORCEINLINE F128 operator+(const F128& rhs) const {
+//            F128 ret;
+//            ret.b = b ^ rhs.b;
+//            return ret;
+//        }
+//        OC_FORCEINLINE F128 operator-(const F128& rhs) const {
+//            F128 ret;
+//            ret.b = b ^ rhs.b;
+//            return ret;
+//        }
+//        OC_FORCEINLINE F128 operator*(const F128& rhs) const {
+//            F128 ret;
+//            ret.b = b.gf128Mul(rhs.b);
+//            return ret;
+//        }
+//        OC_FORCEINLINE bool operator==(const F128& rhs) const {
+//            return b == rhs.b;
+//        }
+//        OC_FORCEINLINE bool operator!=(const F128& rhs) const {
+//            return b != rhs.b;
+//        }
+    };
+
+    /*
+     * Primitive TypeTrait for integers
+     */
+    template<typename T>
+    struct TypeTraitPrimitive {
+        using G = T;
+        using F = T;
+
+        static constexpr size_t bitsG = sizeof(G) * 8;
+        static constexpr size_t bitsF = sizeof(F) * 8;
+        static constexpr size_t bytesG = sizeof(G);
+        static constexpr size_t bytesF = sizeof(F);
+
+        static OC_FORCEINLINE G plus(const G& lhs, const G& rhs) {
+            return lhs + rhs;
+        }
+        static OC_FORCEINLINE G minus(const G& lhs, const G& rhs) {
+            return lhs - rhs;
+        }
+        static OC_FORCEINLINE G mul(const G& lhs, const G& rhs) {
+            return lhs * rhs;
+        }
+        static OC_FORCEINLINE bool eq(const G& lhs, const G& rhs) {
+            return lhs == rhs;
+        }
+
+        static OC_FORCEINLINE BitVector BitVectorF(F& x) {
+            return {(u8*)&x, bitsF};
+        }
+
+        static OC_FORCEINLINE G fromBlock(const block& b) {
+            return b.get<G>()[0];
+        }
+        static OC_FORCEINLINE G pow(u64 power) {
+            G ret = 1;
+            ret <<= power;
             return ret;
-        }
-        OC_FORCEINLINE F128 operator-(const F128& rhs) const {
-            F128 ret;
-            ret.b = b ^ rhs.b;
-            return ret;
-        }
-        OC_FORCEINLINE F128 operator*(const F128& rhs) const {
-            F128 ret;
-            ret.b = b.gf128Mul(rhs.b);
-            return ret;
-        }
-        OC_FORCEINLINE bool operator==(const F128& rhs) const {
-            return b == rhs.b;
-        }
-        OC_FORCEINLINE bool operator!=(const F128& rhs) const {
-            return b != rhs.b;
         }
     };
 
-    //using u128 = __int128;
-    //union conv128 {
-    //  u128 u;
-    //  block m;
-    //};
-    //OC_FORCEINLINE u128 fromBlock(const block &b) {
-    //  conv128 c{};
-    //  c.m = b;
-    //  return c.u;
-    //}
-    //inline std::string u128ToString(u128 value) {
-    //  if (value == 0) {
-    //    return "0";
-    //  }
-    //
-    //  std::string result;
-    //  while (value > 0) {
-    //    uint64_t digit = value % 10;
-    //    result.push_back(static_cast<char>('0' + digit));
-    //    value /= 10;
-    //  }
-    //  reverse(result.begin(), result.end());
-    //  return result;
-    //}
-    //struct TypeTrait128 {
-    //  using F = u128;
-    //  using G = u128;
-    //
-    //  static OC_FORCEINLINE F fromBlock(const block &b) {
-    //    conv128 c{};
-    //    c.m = b;
-    //    return c.u;
-    //  }
-    //  static OC_FORCEINLINE F pow(u64 power) {
-    //    u128 ret = 1;
-    //    ret <<= power;
-    //    return ret;
-    //  }
-    //};
+    using TypeTrait64 = TypeTraitPrimitive<u64>;
 
-    struct TypeTrait64 {
-        using F = u64;
-        using G = u64;
+    /*
+     * TypeTrait for GF(2^128)
+     */
+    struct TypeTraitF128 {
+        using G = block;
+        using F = block;
+
+        static constexpr size_t bitsG = sizeof(G) * 8;
+        static constexpr size_t bitsF = sizeof(F) * 8;
+        static constexpr size_t bytesG = sizeof(G);
+        static constexpr size_t bytesF = sizeof(F);
+
+        static OC_FORCEINLINE G plus(const G& lhs, const G& rhs) {
+            return lhs ^ rhs;
+        }
+        static OC_FORCEINLINE G minus(const G& lhs, const G& rhs) {
+            return lhs ^ rhs;
+        }
+        static OC_FORCEINLINE G mul(const G& lhs, const G& rhs) {
+            return lhs.gf128Mul(rhs);
+        }
+        static OC_FORCEINLINE bool eq(const G& lhs, const G& rhs) {
+            return lhs == rhs;
+        }
+
+        static OC_FORCEINLINE BitVector BitVectorF(F& x) {
+            return {(u8*)&x, bitsF};
+        }
 
         static OC_FORCEINLINE F fromBlock(const block& b) {
-            return b.get<F>()[0];
+            return b;
         }
         static OC_FORCEINLINE F pow(u64 power) {
-            F ret = 1;
-            ret <<= power;
+            F ret = ZeroBlock;
+            *BitIterator((u8*)&ret, power) = 1;
             return ret;
         }
     };
@@ -95,7 +123,6 @@ namespace osuCrypto::Subfield {
             }
             return ret;
         }
-
         OC_FORCEINLINE Vec operator-(const Vec& rhs) const {
             Vec ret;
             for (u64 i = 0; i < N; ++i) {
@@ -103,7 +130,6 @@ namespace osuCrypto::Subfield {
             }
             return ret;
         }
-
         OC_FORCEINLINE Vec operator*(const T& rhs) const {
             Vec ret;
             for (u64 i = 0; i < N; ++i) {
@@ -111,22 +137,18 @@ namespace osuCrypto::Subfield {
             }
             return ret;
         }
-
         OC_FORCEINLINE T operator[](u64 idx) const {
             return v[idx];
         }
-
         OC_FORCEINLINE T& operator[](u64 idx) {
             return v[idx];
         }
-
         OC_FORCEINLINE bool operator==(const Vec& rhs) const {
             for (u64 i = 0; i < N; ++i) {
                 if (v[i] != rhs.v[i]) return false;
             }
             return true;
         }
-
         OC_FORCEINLINE bool operator!=(const Vec& rhs) const {
             return !(*this == rhs);
         }
@@ -135,13 +157,49 @@ namespace osuCrypto::Subfield {
     // TypeTraitVec for array of integers
     template<typename T, size_t N>
     struct TypeTraitVec {
-        using F = Vec<T, N>;
         using G = T;
-        static constexpr size_t bitsG = sizeof(T) * 8;
+        using F = Vec<T, N>;
+
+        static constexpr size_t bitsG = sizeof(G) * 8;
         static constexpr size_t bitsF = sizeof(F) * 8;
+        static constexpr size_t bytesG = sizeof(G);
         static constexpr size_t bytesF = sizeof(F);
+
         static constexpr size_t sizeBlocks = (bytesF + sizeof(block) - 1) / sizeof(block);
         static constexpr size_t size = N;
+
+        static OC_FORCEINLINE F plus(const F& lhs, const F& rhs) {
+            F ret;
+            for (u64 i = 0; i < N; ++i) {
+                ret.v[i] = lhs.v[i] + rhs.v[i];
+            }
+            return ret;
+        }
+        static OC_FORCEINLINE F minus(const F& lhs, const F& rhs) {
+            F ret;
+            for (u64 i = 0; i < N; ++i) {
+                ret.v[i] = lhs.v[i] - rhs.v[i];
+            }
+            return ret;
+        }
+        static OC_FORCEINLINE F mul(const F& lhs, const G& rhs) {
+            F ret;
+            for (u64 i = 0; i < N; ++i) {
+                ret.v[i] = lhs.v[i] * rhs;
+            }
+            return ret;
+        }
+        static OC_FORCEINLINE bool eq(const F& lhs, const F& rhs) {
+            for (u64 i = 0; i < N; ++i) {
+                if (lhs.v[i] != rhs.v[i]) return false;
+            }
+            return true;
+        }
+
+
+        static OC_FORCEINLINE BitVector BitVectorF(F& x) {
+            return {(u8*)&x, bitsF};
+        }
 
         static OC_FORCEINLINE F fromBlock(const block& b) {
             F ret;
