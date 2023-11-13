@@ -29,6 +29,7 @@
 namespace osuCrypto::Subfield
 {
 
+    template<typename TypeTrait>
     inline void SubfieldExConvConfigure(
         u64 numOTs, u64 secParam,
         MultType mMultType,
@@ -37,7 +38,7 @@ namespace osuCrypto::Subfield
         u64& mSizePer,
         u64& mN2,
         u64& mN,
-        ExConvCode& mEncoder
+        ExConvCode<TypeTrait>& mEncoder
     )
     {
         u64 a = 24;
@@ -111,7 +112,7 @@ namespace osuCrypto::Subfield
 #ifdef ENABLE_INSECURE_SILVER
         SilverEncoder mEncoder;
 #endif
-        ExConvCode mExConvEncoder;
+        ExConvCode<TypeTrait> mExConvEncoder;
 
         AlignedUnVector<F> mB;
 
@@ -413,7 +414,7 @@ namespace osuCrypto::Subfield
                 if (mTimer) {
                     mExConvEncoder.setTimer(getTimer());
                 }
-                mExConvEncoder.dualEncode<F>(mB.subspan(0, mExConvEncoder.mCodeSize));
+                mExConvEncoder.template dualEncode<F>(mB.subspan(0, mExConvEncoder.mCodeSize));
                 break;
             default:
                 throw RTE_LOC;

@@ -17,6 +17,7 @@ namespace osuCrypto::Subfield
     // The encoder for the expander matrix B.
     // B has mMessageSize rows and mCodeSize columns. It is sampled uniformly
     // with fixed row weight mExpanderWeight.
+    template<typename TypeTrait>
     class ExpanderCode
     {
     public:
@@ -75,8 +76,8 @@ namespace osuCrypto::Subfield
 
           if (Add)
           {
-            *y1 = *y1 + ee1[r];
-            *y2 = *y2 + ee2[r];
+            *y1 = TypeTrait::plus(*y1, ee1[r]);
+            *y2 = TypeTrait::plus(*y2, ee2[r]);
           }
           else
           {
@@ -113,17 +114,24 @@ namespace osuCrypto::Subfield
             w[7] = ee[rr[7]];
 
             auto ww =
-                w[0] +
-                    w[1] +
-                    w[2] +
-                    w[3] +
-                    w[4] +
-                    w[5] +
-                    w[6] +
-                    w[7];
+                TypeTrait::plus(
+                    TypeTrait::plus(
+                        TypeTrait::plus(
+                            TypeTrait::plus(
+                                TypeTrait::plus(
+                                    TypeTrait::plus(
+                                        TypeTrait::plus(
+                                            w[0],
+                                            w[1]),
+                                        w[2]),
+                                    w[3]),
+                                w[4]),
+                            w[5]),
+                        w[6]),
+                    w[7]);
 
             if constexpr (count > 8)
-              ww = ww + expandOne<T, count - 8>(ee, prng);
+              ww = TypeTrait::plus(ww, expandOne<T, count - 8>(ee, prng));
             return ww;
           }
           else
@@ -131,7 +139,7 @@ namespace osuCrypto::Subfield
 
             auto r = prng.get();
             auto ww = expandOne<T, count - 1>(ee, prng);
-            return ww + ee[r];
+            return TypeTrait::plus(ww, ee[r]);
           }
         }
 
@@ -177,37 +185,51 @@ namespace osuCrypto::Subfield
             w2[7] = ee2[rr[7]];
 
             auto ww1 =
-                w1[0] +
-                    w1[1] +
-                    w1[2] +
-                    w1[3] +
-                    w1[4] +
-                    w1[5] +
-                    w1[6] +
-                    w1[7];
+                    TypeTrait::plus(
+                            TypeTrait::plus(
+                                    TypeTrait::plus(
+                                            TypeTrait::plus(
+                                                    TypeTrait::plus(
+                                                            TypeTrait::plus(
+                                                                    TypeTrait::plus(
+                                                                            w1[0],
+                                                                            w1[1]),
+                                                                            w1[2]),
+                                                                            w1[3]),
+                                                                            w1[4]),
+                                                                            w1[5]),
+                                                                            w1[6]),
+                                                                            w1[7]);
             auto ww2 =
-                w2[0] +
-                    w2[1] +
-                    w2[2] +
-                    w2[3] +
-                    w2[4] +
-                    w2[5] +
-                    w2[6] +
-                    w2[7];
+                    TypeTrait::plus(
+                            TypeTrait::plus(
+                                    TypeTrait::plus(
+                                            TypeTrait::plus(
+                                                    TypeTrait::plus(
+                                                            TypeTrait::plus(
+                                                                    TypeTrait::plus(
+                                                                            w2[0],
+                                                                            w2[1]),
+                                                                            w2[2]),
+                                                                            w2[3]),
+                                                                            w2[4]),
+                                                                            w2[5]),
+                                                                            w2[6]),
+                                                                            w2[7]);
 
             if constexpr (count > 8)
             {
               T yy1;
               T2 yy2;
               expandOne<T, T2, count - 8, false>(ee1, ee2, &yy1, &yy2, prng);
-              ww1 = ww1 + yy1;
-              ww2 = ww2 + yy2;
+              ww1 = TypeTrait::plus(ww1, yy1);
+              ww2 = TypeTrait::plus(ww2, yy2);
             }
 
             if constexpr (Add)
             {
-              *y1 = *y1 + ww1;
-              *y2 = *y2 + ww2;
+              *y1 = TypeTrait::plus(*y1, ww1);
+              *y2 = TypeTrait::plus(*y2, ww2);
             }
             else
             {
@@ -225,8 +247,8 @@ namespace osuCrypto::Subfield
               auto w1 = ee1[r];
               auto w2 = ee2[r];
               expandOne<T, T2, count - 1, true>(ee1, ee2, y1, y2, prng);
-              *y1 = *y1 + w1;
-              *y2 = *y2 + w2;
+              *y1 = TypeTrait::plus(*y1, w1);
+              *y2 = TypeTrait::plus(*y2, w2);
 
             }
             else
@@ -235,8 +257,8 @@ namespace osuCrypto::Subfield
               T yy1;
               T2 yy2;
               expandOne<T, T2, count - 1, false>(ee1, ee2, &yy1, &yy2, prng);
-              *y1 = ee1[r] + yy1;
-              *y2 = ee2[r] + yy2;
+              *y1 = TypeTrait::plus(yy1, ee1[r]);
+              *y2 = TypeTrait::plus(yy2, ee2[r]);
             }
           }
         }
@@ -262,14 +284,14 @@ namespace osuCrypto::Subfield
                 case I:\
                 if constexpr(Add)\
                 {\
-                    ww[i + 0] = ww[i + 0] + expandOne<T, I>(ee, prng);\
-                    ww[i + 1] = ww[i + 1] + expandOne<T, I>(ee, prng);\
-                    ww[i + 2] = ww[i + 2] + expandOne<T, I>(ee, prng);\
-                    ww[i + 3] = ww[i + 3] + expandOne<T, I>(ee, prng);\
-                    ww[i + 4] = ww[i + 4] + expandOne<T, I>(ee, prng);\
-                    ww[i + 5] = ww[i + 5] + expandOne<T, I>(ee, prng);\
-                    ww[i + 6] = ww[i + 6] + expandOne<T, I>(ee, prng);\
-                    ww[i + 7] = ww[i + 7] + expandOne<T, I>(ee, prng);\
+                    ww[i + 0] = TypeTrait::plus(ww[i + 0], expandOne<T, I>(ee, prng));\
+                    ww[i + 1] = TypeTrait::plus(ww[i + 1], expandOne<T, I>(ee, prng));\
+                    ww[i + 2] = TypeTrait::plus(ww[i + 2], expandOne<T, I>(ee, prng));\
+                    ww[i + 3] = TypeTrait::plus(ww[i + 3], expandOne<T, I>(ee, prng));\
+                    ww[i + 4] = TypeTrait::plus(ww[i + 4], expandOne<T, I>(ee, prng));\
+                    ww[i + 5] = TypeTrait::plus(ww[i + 5], expandOne<T, I>(ee, prng));\
+                    ww[i + 6] = TypeTrait::plus(ww[i + 6], expandOne<T, I>(ee, prng));\
+                    ww[i + 7] = TypeTrait::plus(ww[i + 7], expandOne<T, I>(ee, prng));\
                 }\
                 else\
                 {\
@@ -301,10 +323,10 @@ namespace osuCrypto::Subfield
                   for (auto j = 1ull; j < mExpanderWeight; ++j)
                   {
                     r = prng.get();
-                    wv = wv + ee[r];
+                    wv = TypeTrait::plus(wv, ee[r]);
                   }
                   if constexpr (Add)
-                    ww[i + jj] = ww[i + jj] + wv;
+                    ww[i + jj] = TypeTrait::plus(ww[i + jj], wv);
                   else
                     ww[i + jj] = wv;
 
@@ -317,10 +339,10 @@ namespace osuCrypto::Subfield
           {
             auto wv = ee[prng.get()];
             for (auto j = 1ull; j < mExpanderWeight; ++j)
-              wv = wv + ee[prng.get()];
+              wv = TypeTrait::plus(wv, ee[prng.get()]);
 
             if constexpr (Add)
-              ww[i] = ww[i] + wv;
+              ww[i] = TypeTrait::plus(ww[i], wv);
             else
               ww[i] = wv;
           }
@@ -380,13 +402,13 @@ namespace osuCrypto::Subfield
                   for (auto j = 1ull; j < mExpanderWeight; ++j)
                   {
                     r = prng.get();
-                    wv1 = wv1 + ee1[r];
-                    wv2 = wv2 + ee2[r];
+                    wv1 = TypeTrait::plus(wv1, ee1[r]);
+                    wv2 = TypeTrait::plus(wv2, ee2[r]);
                   }
                   if constexpr (Add)
                   {
-                    ww1[i + jj] = ww1[i + jj] + wv1;
-                    ww2[i + jj] = ww2[i + jj] + wv2;
+                    ww1[i + jj] = TypeTrait::plus(ww1[i + jj], wv1);
+                    ww2[i + jj] = TypeTrait::plus(ww2[i + jj], wv2);
                   }
                   else
                   {
@@ -407,14 +429,14 @@ namespace osuCrypto::Subfield
             for (auto j = 1ull; j < mExpanderWeight; ++j)
             {
               r = prng.get();
-              wv1 = wv1 + ee1[r];
-              wv2 = wv2 + ee2[r];
+              wv1 = TypeTrait::plus(wv1, ee1[r]);
+              wv2 = TypeTrait::plus(wv2, ee2[r]);
 
             }
             if constexpr (Add)
             {
-              ww1[i] = ww1[i] + wv1;
-              ww2[i] = ww2[i] + wv2;
+              ww1[i] = TypeTrait::plus(ww1[i], wv1);
+              ww2[i] = TypeTrait::plus(ww2[i], wv2);
             }
             else
             {

@@ -30,10 +30,12 @@ namespace osuCrypto::Subfield
     // dualEncode can be called on.
     //
     // https://eprint.iacr.org/2023/882
+
+    template<typename TypeTrait>
     class ExConvCode : public TimerAdapter
     {
     public:
-        ExpanderCode mExpander;
+        ExpanderCode<TypeTrait> mExpander;
 
         // configure the code. The default parameters are choses to balance security and performance.
         // For additional parameter choices see the paper.
@@ -111,7 +113,7 @@ namespace osuCrypto::Subfield
 
                 setTimePoint("ExConv.encode.accumulate");
 
-                mExpander.expand<T, false>(e, w);
+                mExpander.template expand<T, false>(e, w);
                 setTimePoint("ExConv.encode.expand");
             }
         }
@@ -129,7 +131,7 @@ namespace osuCrypto::Subfield
                 setTimePoint("ExConv.encode.begin");
                 accumulate<T>(d);
                 setTimePoint("ExConv.encode.accumulate");
-                mExpander.expand<T, true>(d, e.subspan(0, mMessageSize));
+                mExpander.template expand<T, true>(d, e.subspan(0, mMessageSize));
                 setTimePoint("ExConv.encode.expand");
             }
             else
@@ -159,7 +161,7 @@ namespace osuCrypto::Subfield
                 setTimePoint("ExConv.encode.begin");
                 accumulate<T0, T1>(d0, d1);
                 setTimePoint("ExConv.encode.accumulate");
-                mExpander.expand<T0, T1, true>(
+                mExpander.template expand<T0, T1, true>(
                     d0, d1,
                     e0.subspan(0, mMessageSize),
                     e1.subspan(0, mMessageSize));
@@ -408,43 +410,25 @@ namespace osuCrypto::Subfield
                 block tt[8];
                 memcpy(tt, bb, 8 * 16);
 
-                //            if (!rangeCheck || j + 0 < size) xx[j + 0] = xx[j + 0] ^ tt[0];
-                //            if (!rangeCheck || j + 1 < size) xx[j + 1] = xx[j + 1] ^ tt[1];
-                //            if (!rangeCheck || j + 2 < size) xx[j + 2] = xx[j + 2] ^ tt[2];
-                //            if (!rangeCheck || j + 3 < size) xx[j + 3] = xx[j + 3] ^ tt[3];
-                //            if (!rangeCheck || j + 4 < size) xx[j + 4] = xx[j + 4] ^ tt[4];
-                //            if (!rangeCheck || j + 5 < size) xx[j + 5] = xx[j + 5] ^ tt[5];
-                //            if (!rangeCheck || j + 6 < size) xx[j + 6] = xx[j + 6] ^ tt[6];
-                //            if (!rangeCheck || j + 7 < size) xx[j + 7] = xx[j + 7] ^ tt[7];
-
-                if (!rangeCheck || j + 0 < size) xx[j + 0] = xx[j + 0] + tt[0];
-                if (!rangeCheck || j + 1 < size) xx[j + 1] = xx[j + 1] + tt[1];
-                if (!rangeCheck || j + 2 < size) xx[j + 2] = xx[j + 2] + tt[2];
-                if (!rangeCheck || j + 3 < size) xx[j + 3] = xx[j + 3] + tt[3];
-                if (!rangeCheck || j + 4 < size) xx[j + 4] = xx[j + 4] + tt[4];
-                if (!rangeCheck || j + 5 < size) xx[j + 5] = xx[j + 5] + tt[5];
-                if (!rangeCheck || j + 6 < size) xx[j + 6] = xx[j + 6] + tt[6];
-                if (!rangeCheck || j + 7 < size) xx[j + 7] = xx[j + 7] + tt[7];
+                if (!rangeCheck || j + 0 < size) xx[j + 0] = TypeTrait::plus(xx[j + 0], tt[0]);
+                if (!rangeCheck || j + 1 < size) xx[j + 1] = TypeTrait::plus(xx[j + 1], tt[1]);
+                if (!rangeCheck || j + 2 < size) xx[j + 2] = TypeTrait::plus(xx[j + 2], tt[2]);
+                if (!rangeCheck || j + 3 < size) xx[j + 3] = TypeTrait::plus(xx[j + 3], tt[3]);
+                if (!rangeCheck || j + 4 < size) xx[j + 4] = TypeTrait::plus(xx[j + 4], tt[4]);
+                if (!rangeCheck || j + 5 < size) xx[j + 5] = TypeTrait::plus(xx[j + 5], tt[5]);
+                if (!rangeCheck || j + 6 < size) xx[j + 6] = TypeTrait::plus(xx[j + 6], tt[6]);
+                if (!rangeCheck || j + 7 < size) xx[j + 7] = TypeTrait::plus(xx[j + 7], tt[7]);
             }
             else
             {
-                //            if (!rangeCheck || j + 0 < size) xx[j + 0] = xx[j + 0] ^ bb0;
-                //            if (!rangeCheck || j + 1 < size) xx[j + 1] = xx[j + 1] ^ bb1;
-                //            if (!rangeCheck || j + 2 < size) xx[j + 2] = xx[j + 2] ^ bb2;
-                //            if (!rangeCheck || j + 3 < size) xx[j + 3] = xx[j + 3] ^ bb3;
-                //            if (!rangeCheck || j + 4 < size) xx[j + 4] = xx[j + 4] ^ bb4;
-                //            if (!rangeCheck || j + 5 < size) xx[j + 5] = xx[j + 5] ^ bb5;
-                //            if (!rangeCheck || j + 6 < size) xx[j + 6] = xx[j + 6] ^ bb6;
-                //            if (!rangeCheck || j + 7 < size) xx[j + 7] = xx[j + 7] ^ bb7;
-
-                if ((!rangeCheck || j + 0 < size) && b[0].get<i32>(0) < 0) xx[j + 0] = xx[j + 0] + xx[i];
-                if ((!rangeCheck || j + 1 < size) && b[1].get<i32>(0) < 0) xx[j + 1] = xx[j + 1] + xx[i];
-                if ((!rangeCheck || j + 2 < size) && b[2].get<i32>(0) < 0) xx[j + 2] = xx[j + 2] + xx[i];
-                if ((!rangeCheck || j + 3 < size) && b[3].get<i32>(0) < 0) xx[j + 3] = xx[j + 3] + xx[i];
-                if ((!rangeCheck || j + 4 < size) && b[4].get<i32>(0) < 0) xx[j + 4] = xx[j + 4] + xx[i];
-                if ((!rangeCheck || j + 5 < size) && b[5].get<i32>(0) < 0) xx[j + 5] = xx[j + 5] + xx[i];
-                if ((!rangeCheck || j + 6 < size) && b[6].get<i32>(0) < 0) xx[j + 6] = xx[j + 6] + xx[i];
-                if ((!rangeCheck || j + 7 < size) && b[7].get<i32>(0) < 0) xx[j + 7] = xx[j + 7] + xx[i];
+                if ((!rangeCheck || j + 0 < size) && b[0].get<i32>(0) < 0) xx[j + 0] = TypeTrait::plus(xx[j + 0], xx[i]);
+                if ((!rangeCheck || j + 1 < size) && b[1].get<i32>(0) < 0) xx[j + 1] = TypeTrait::plus(xx[j + 1], xx[i]);
+                if ((!rangeCheck || j + 2 < size) && b[2].get<i32>(0) < 0) xx[j + 2] = TypeTrait::plus(xx[j + 2], xx[i]);
+                if ((!rangeCheck || j + 3 < size) && b[3].get<i32>(0) < 0) xx[j + 3] = TypeTrait::plus(xx[j + 3], xx[i]);
+                if ((!rangeCheck || j + 4 < size) && b[4].get<i32>(0) < 0) xx[j + 4] = TypeTrait::plus(xx[j + 4], xx[i]);
+                if ((!rangeCheck || j + 5 < size) && b[5].get<i32>(0) < 0) xx[j + 5] = TypeTrait::plus(xx[j + 5], xx[i]);
+                if ((!rangeCheck || j + 6 < size) && b[6].get<i32>(0) < 0) xx[j + 6] = TypeTrait::plus(xx[j + 6], xx[i]);
+                if ((!rangeCheck || j + 7 < size) && b[7].get<i32>(0) < 0) xx[j + 7] = TypeTrait::plus(xx[j + 7], xx[i]);
             }
         }
 
@@ -494,8 +478,7 @@ namespace osuCrypto::Subfield
             }
 
             if (!rangeCheck || j < size) {
-                //            auto xj = xx[j] ^ xx[i];
-                auto xj = xx[j] + xx[i];
+                auto xj = TypeTrait::plus(xx[j], xx[i]);
                 xx[j] = xj;
             }
         }
@@ -561,12 +544,8 @@ namespace osuCrypto::Subfield
 
             if (!rangeCheck || j < size)
             {
-                //            auto xj0 = xx0[j] ^ xx0[i];
-                //            auto xj1 = xx1[j] ^ xx1[i];
-                auto xj0 = xx0[j] + xx0[i];
-                auto xj1 = xx1[j] + xx1[i];
-                xx0[j] = xj0;
-                xx1[j] = xj1;
+                xx0[j] = TypeTrait::plus(xx0[j], xx0[i]);
+                xx1[j] = TypeTrait::plus(xx1[j], xx1[i]);
             }
         }
 

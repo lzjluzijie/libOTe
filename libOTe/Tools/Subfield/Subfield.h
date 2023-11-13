@@ -44,16 +44,16 @@ namespace osuCrypto::Subfield {
         static constexpr size_t bytesG = sizeof(G);
         static constexpr size_t bytesF = sizeof(F);
 
-        static OC_FORCEINLINE G plus(const G& lhs, const G& rhs) {
+        static OC_FORCEINLINE F plus(const F& lhs, const F& rhs) {
             return lhs + rhs;
         }
-        static OC_FORCEINLINE G minus(const G& lhs, const G& rhs) {
+        static OC_FORCEINLINE F minus(const F& lhs, const F& rhs) {
             return lhs - rhs;
         }
-        static OC_FORCEINLINE G mul(const G& lhs, const G& rhs) {
+        static OC_FORCEINLINE F mul(const F& lhs, const F& rhs) {
             return lhs * rhs;
         }
-        static OC_FORCEINLINE bool eq(const G& lhs, const G& rhs) {
+        static OC_FORCEINLINE bool eq(const F& lhs, const F& rhs) {
             return lhs == rhs;
         }
 
@@ -61,11 +61,11 @@ namespace osuCrypto::Subfield {
             return {(u8*)&x, bitsF};
         }
 
-        static OC_FORCEINLINE G fromBlock(const block& b) {
-            return b.get<G>()[0];
+        static OC_FORCEINLINE F fromBlock(const block& b) {
+            return b.get<F>()[0];
         }
-        static OC_FORCEINLINE G pow(u64 power) {
-            G ret = 1;
+        static OC_FORCEINLINE F pow(u64 power) {
+            F ret = 1;
             ret <<= power;
             return ret;
         }
@@ -85,16 +85,16 @@ namespace osuCrypto::Subfield {
         static constexpr size_t bytesG = sizeof(G);
         static constexpr size_t bytesF = sizeof(F);
 
-        static OC_FORCEINLINE G plus(const G& lhs, const G& rhs) {
+        static OC_FORCEINLINE F plus(const F& lhs, const F& rhs) {
             return lhs ^ rhs;
         }
-        static OC_FORCEINLINE G minus(const G& lhs, const G& rhs) {
+        static OC_FORCEINLINE F minus(const F& lhs, const F& rhs) {
             return lhs ^ rhs;
         }
-        static OC_FORCEINLINE G mul(const G& lhs, const G& rhs) {
+        static OC_FORCEINLINE F mul(const F& lhs, const F& rhs) {
             return lhs.gf128Mul(rhs);
         }
-        static OC_FORCEINLINE bool eq(const G& lhs, const G& rhs) {
+        static OC_FORCEINLINE bool eq(const F& lhs, const F& rhs) {
             return lhs == rhs;
         }
 
@@ -195,7 +195,9 @@ namespace osuCrypto::Subfield {
             }
             return true;
         }
-
+        static OC_FORCEINLINE G plus(const G& lhs, const G& rhs) {
+            return lhs + rhs;
+        }
 
         static OC_FORCEINLINE BitVector BitVectorF(F& x) {
             return {(u8*)&x, bitsF};

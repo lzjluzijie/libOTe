@@ -15,39 +15,37 @@ namespace osuCrypto::Subfield
 
     void Subfield_ExConvCode_encode_test(const oc::CLP& cmd)
     {
-//        {
-//            u64 n = 1024;
-//            ExConvCode code;
-//            code.config(n / 2, n, 7, 24, true);
-//
-//            PRNG prng(ZeroBlock);
-//            F128 delta = prng.get<F128>();
-//            std::vector<F128> y(n), z0(n), z1(n);
-//            prng.get(y.data(), y.size());
-//            prng.get(z0.data(), z0.size());
-//            for (u64 i = 0; i < n; ++i)
-//            {
-//                z1[i] = z0[i] + delta * y[i];
-//            }
-//
-//            static_assert(std::is_trivial<F128>::value);
-//
-//            code.dualEncode<F128>(z1);
-//            code.dualEncode<F128>(z0);
-//            code.dualEncode<F128>(y);
-//
-//            for (u64 i = 0; i < n; ++i)
-//            {
-//                F128 left = delta * y[i];
-//                F128 right = z1[i] - z0[i];
-//                if (left != right)
-//                    throw RTE_LOC;
-//            }
-//        }
+        {
+            u64 n = 1024;
+            ExConvCode<TypeTraitF128> code;
+            code.config(n / 2, n, 7, 24, true);
+
+            PRNG prng(ZeroBlock);
+            block delta = prng.get<block>();
+            std::vector<block> y(n), z0(n), z1(n);
+            prng.get(y.data(), y.size());
+            prng.get(z0.data(), z0.size());
+            for (u64 i = 0; i < n; ++i)
+            {
+                z1[i] = z0[i] ^ delta.gf128Mul(y[i]);
+            }
+
+            code.dualEncode<block>(z1);
+            code.dualEncode<block>(z0);
+            code.dualEncode<block>(y);
+
+            for (u64 i = 0; i < n; ++i)
+            {
+                block left = delta.gf128Mul(y[i]);
+                block right = z1[i] ^ z0[i];
+                if (left != right)
+                    throw RTE_LOC;
+            }
+        }
 
         {
             u64 n = 1024;
-            ExConvCode code;
+            ExConvCode<TypeTraitPrimitive<u8>> code;
             code.config(n / 2, n, 7, 24, true);
 
             PRNG prng(ZeroBlock);
@@ -74,7 +72,7 @@ namespace osuCrypto::Subfield
 
         {
             u64 n = 1024;
-            ExConvCode code;
+            ExConvCode<TypeTrait64> code;
             code.config(n / 2, n, 7, 24, true);
 
             PRNG prng(ZeroBlock);
