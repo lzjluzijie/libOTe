@@ -492,7 +492,7 @@ namespace osuCrypto::Subfield
                                 //    H(x) = (AES(k0, x) + x) || (AES(k1, x) + x);
                                 //
                                 // where each half defines one of the children.
-                                aes[keep].hashBlocks<8>(parent.data(), child.data());
+                                aes[keep].template hashBlocks<8>(parent.data(), child.data());
 
                                 if (d < pprf.mDepth - 1) {
                                     // for intermediate levels, same as before
