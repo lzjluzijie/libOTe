@@ -527,10 +527,12 @@ namespace osuCrypto::Subfield
                     mExConvEncoder.setTimer(getTimer());
                 }
 
-                mExConvEncoder.template dualEncode2<F, G>(
-                    mA.subspan(0, mExConvEncoder.mCodeSize),
-                    mC.subspan(0, mExConvEncoder.mCodeSize)
-                    );
+//                mExConvEncoder.template dualEncode2<F, G>(
+//                    mA.subspan(0, mExConvEncoder.mCodeSize),
+//                    mC.subspan(0, mExConvEncoder.mCodeSize)
+//                    );
+                mExConvEncoder.template dualEncode<F>(mA.subspan(0, mExConvEncoder.mCodeSize));
+                mExConvEncoder.template dualEncode<G>(mC.subspan(0, mExConvEncoder.mCodeSize));
 
                 break;
             default:
