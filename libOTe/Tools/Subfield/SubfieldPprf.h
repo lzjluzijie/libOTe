@@ -589,7 +589,7 @@ namespace osuCrypto::Subfield
                             maskIn[1] = pprf.mBaseOTs[treeIdx + j][d][0] ^ AllOneBlock;
                             maskIn[2] = pprf.mBaseOTs[treeIdx + j][d][1];
                             maskIn[3] = pprf.mBaseOTs[treeIdx + j][d][1] ^ AllOneBlock;
-                            mAesFixedKey.typename hashBlocks<4>(maskIn.data(), masks.data());
+                            mAesFixedKey.hashBlocks<4>(maskIn.data(), masks.data());
 
         #ifdef DEBUG_PRINT_PPRF
                             if (mPrint) {
@@ -1221,7 +1221,7 @@ namespace osuCrypto::Subfield
                             //    H(x) = (AES(k0, x) + x) || (AES(k1, x) + x);
                             //
                             // where each half defines one of the children.
-                            aes[keep].typename hashBlocks<8>(parent.data(), child.data());
+                            aes[keep].hashBlocks<8>(parent.data(), child.data());
 
 
 
@@ -1367,7 +1367,7 @@ namespace osuCrypto::Subfield
                         // into a 256 bit OT string using AES.
                         maskIn[0] = pprf.mBaseOTs[j + treeIdx][d];
                         maskIn[1] = pprf.mBaseOTs[j + treeIdx][d] ^ AllOneBlock;
-                        mAesFixedKey.typename hashBlocks<2>(maskIn.data(), masks.data());
+                        mAesFixedKey.hashBlocks<2>(maskIn.data(), masks.data());
 
                         // now get the chosen message OT strings by XORing
                         // the expended (random) OT strings with the lastOts values.
