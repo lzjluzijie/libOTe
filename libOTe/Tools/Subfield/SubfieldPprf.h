@@ -1367,7 +1367,7 @@ namespace osuCrypto::Subfield
                         // into a 256 bit OT string using AES.
                         maskIn[0] = pprf.mBaseOTs[j + treeIdx][d];
                         maskIn[1] = pprf.mBaseOTs[j + treeIdx][d] ^ AllOneBlock;
-                        mAesFixedKey.hashBlocks<2>(maskIn.data(), masks.data());
+                        mAesFixedKey.template hashBlocks<2>(maskIn.data(), masks.data());
 
                         // now get the chosen message OT strings by XORing
                         // the expended (random) OT strings with the lastOts values.
