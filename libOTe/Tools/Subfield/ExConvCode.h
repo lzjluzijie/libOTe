@@ -385,42 +385,42 @@ namespace osuCrypto::Subfield
         {
             My__m128 Zero = _mm_setzero_ps();
 
-            if constexpr (std::is_same<block, T>::value)
-            {
-                My__m128 bb[8];
-                bb[0] = _mm_load_ps((float*)&b[0]);
-                bb[1] = _mm_load_ps((float*)&b[1]);
-                bb[2] = _mm_load_ps((float*)&b[2]);
-                bb[3] = _mm_load_ps((float*)&b[3]);
-                bb[4] = _mm_load_ps((float*)&b[4]);
-                bb[5] = _mm_load_ps((float*)&b[5]);
-                bb[6] = _mm_load_ps((float*)&b[6]);
-                bb[7] = _mm_load_ps((float*)&b[7]);
-
-
-                bb[0] = _mm_blendv_ps(Zero, xii, bb[0]);
-                bb[1] = _mm_blendv_ps(Zero, xii, bb[1]);
-                bb[2] = _mm_blendv_ps(Zero, xii, bb[2]);
-                bb[3] = _mm_blendv_ps(Zero, xii, bb[3]);
-                bb[4] = _mm_blendv_ps(Zero, xii, bb[4]);
-                bb[5] = _mm_blendv_ps(Zero, xii, bb[5]);
-                bb[6] = _mm_blendv_ps(Zero, xii, bb[6]);
-                bb[7] = _mm_blendv_ps(Zero, xii, bb[7]);
-
-                block tt[8];
-                memcpy(tt, bb, 8 * 16);
-
-                if (!rangeCheck || j + 0 < size) xx[j + 0] = TypeTrait::plus(xx[j + 0], tt[0]);
-                if (!rangeCheck || j + 1 < size) xx[j + 1] = TypeTrait::plus(xx[j + 1], tt[1]);
-                if (!rangeCheck || j + 2 < size) xx[j + 2] = TypeTrait::plus(xx[j + 2], tt[2]);
-                if (!rangeCheck || j + 3 < size) xx[j + 3] = TypeTrait::plus(xx[j + 3], tt[3]);
-                if (!rangeCheck || j + 4 < size) xx[j + 4] = TypeTrait::plus(xx[j + 4], tt[4]);
-                if (!rangeCheck || j + 5 < size) xx[j + 5] = TypeTrait::plus(xx[j + 5], tt[5]);
-                if (!rangeCheck || j + 6 < size) xx[j + 6] = TypeTrait::plus(xx[j + 6], tt[6]);
-                if (!rangeCheck || j + 7 < size) xx[j + 7] = TypeTrait::plus(xx[j + 7], tt[7]);
-            }
-            else
-            {
+//            if constexpr (std::is_same<block, T>::value)
+//            {
+//                My__m128 bb[8];
+//                bb[0] = _mm_load_ps((float*)&b[0]);
+//                bb[1] = _mm_load_ps((float*)&b[1]);
+//                bb[2] = _mm_load_ps((float*)&b[2]);
+//                bb[3] = _mm_load_ps((float*)&b[3]);
+//                bb[4] = _mm_load_ps((float*)&b[4]);
+//                bb[5] = _mm_load_ps((float*)&b[5]);
+//                bb[6] = _mm_load_ps((float*)&b[6]);
+//                bb[7] = _mm_load_ps((float*)&b[7]);
+//
+//
+//                bb[0] = _mm_blendv_ps(Zero, xii, bb[0]);
+//                bb[1] = _mm_blendv_ps(Zero, xii, bb[1]);
+//                bb[2] = _mm_blendv_ps(Zero, xii, bb[2]);
+//                bb[3] = _mm_blendv_ps(Zero, xii, bb[3]);
+//                bb[4] = _mm_blendv_ps(Zero, xii, bb[4]);
+//                bb[5] = _mm_blendv_ps(Zero, xii, bb[5]);
+//                bb[6] = _mm_blendv_ps(Zero, xii, bb[6]);
+//                bb[7] = _mm_blendv_ps(Zero, xii, bb[7]);
+//
+//                block tt[8];
+//                memcpy(tt, bb, 8 * 16);
+//
+//                if (!rangeCheck || j + 0 < size) xx[j + 0] = TypeTrait::plus(xx[j + 0], tt[0]);
+//                if (!rangeCheck || j + 1 < size) xx[j + 1] = TypeTrait::plus(xx[j + 1], tt[1]);
+//                if (!rangeCheck || j + 2 < size) xx[j + 2] = TypeTrait::plus(xx[j + 2], tt[2]);
+//                if (!rangeCheck || j + 3 < size) xx[j + 3] = TypeTrait::plus(xx[j + 3], tt[3]);
+//                if (!rangeCheck || j + 4 < size) xx[j + 4] = TypeTrait::plus(xx[j + 4], tt[4]);
+//                if (!rangeCheck || j + 5 < size) xx[j + 5] = TypeTrait::plus(xx[j + 5], tt[5]);
+//                if (!rangeCheck || j + 6 < size) xx[j + 6] = TypeTrait::plus(xx[j + 6], tt[6]);
+//                if (!rangeCheck || j + 7 < size) xx[j + 7] = TypeTrait::plus(xx[j + 7], tt[7]);
+//            }
+//            else
+//            {
                 if ((!rangeCheck || j + 0 < size) && b[0].get<i32>(0) < 0) xx[j + 0] = TypeTrait::plus(xx[j + 0], xx[i]);
                 if ((!rangeCheck || j + 1 < size) && b[1].get<i32>(0) < 0) xx[j + 1] = TypeTrait::plus(xx[j + 1], xx[i]);
                 if ((!rangeCheck || j + 2 < size) && b[2].get<i32>(0) < 0) xx[j + 2] = TypeTrait::plus(xx[j + 2], xx[i]);
@@ -429,7 +429,7 @@ namespace osuCrypto::Subfield
                 if ((!rangeCheck || j + 5 < size) && b[5].get<i32>(0) < 0) xx[j + 5] = TypeTrait::plus(xx[j + 5], xx[i]);
                 if ((!rangeCheck || j + 6 < size) && b[6].get<i32>(0) < 0) xx[j + 6] = TypeTrait::plus(xx[j + 6], xx[i]);
                 if ((!rangeCheck || j + 7 < size) && b[7].get<i32>(0) < 0) xx[j + 7] = TypeTrait::plus(xx[j + 7], xx[i]);
-            }
+//            }
         }
 
         // accumulating row i.
@@ -466,14 +466,14 @@ namespace osuCrypto::Subfield
                     b[6] = rnd.slli_epi32<6>();
                     b[7] = rnd.slli_epi32<7>();
 
-                    if constexpr (std::is_same<block, T>::value) {
-                        accOneHelper<T, rangeCheck>(xx, _mm_setzero_ps(), j, i, size, b);
-                    }
-                    else {
+//                    if constexpr (std::is_same<block, T>::value) {
+//                        accOneHelper<T, rangeCheck>(xx, _mm_setzero_ps(), j, i, size, b);
+//                    }
+//                    else {
                         My__m128 xii;// = ::_mm_set_ps(0.0f, 0.0f, 0.0f, 0.0f);
                         memset(&xii, 0, sizeof(My__m128));
                         accOneHelper<T, rangeCheck>(xx, xii, j, i, size, b);
-                    }
+//                    }
                 }
             }
 
@@ -525,20 +525,20 @@ namespace osuCrypto::Subfield
                     b[6] = rnd.slli_epi32<6>();
                     b[7] = rnd.slli_epi32<7>();
 
-                    if constexpr (std::is_same<block, T0>::value) {
-                        auto xii0 = _mm_load_ps((float*)(xx0 + i));
-                        accOneHelper<T0, rangeCheck>(xx0, xii0, j, i, size, b);
-                    }
-                    else {
+//                    if constexpr (std::is_same<block, T0>::value) {
+//                        auto xii0 = _mm_load_ps((float*)(xx0 + i));
+//                        accOneHelper<T0, rangeCheck>(xx0, xii0, j, i, size, b);
+//                    }
+//                    else {
                         accOneHelper<T0, rangeCheck>(xx0, _mm_setzero_ps(), j, i, size, b);
-                    }
-                    if constexpr (std::is_same<block, T1>::value) {
-                        auto xii1 = _mm_load_ps((float*)(xx1 + i));
-                        accOneHelper<T1, rangeCheck>(xx1, xii1, j, i, size, b);
-                    }
-                    else {
+//                    }
+//                    if constexpr (std::is_same<block, T1>::value) {
+//                        auto xii1 = _mm_load_ps((float*)(xx1 + i));
+//                        accOneHelper<T1, rangeCheck>(xx1, xii1, j, i, size, b);
+//                    }
+//                    else {
                         accOneHelper<T1, rangeCheck>(xx1, _mm_setzero_ps(), j, i, size, b);
-                    }
+//                    }
                 }
             }
 

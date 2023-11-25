@@ -31,9 +31,9 @@ namespace osuCrypto::Subfield
             }
 
             code.dualEncode<block>(z1);
-            code.dualEncode<block>(z0);
-            code.dualEncode<block>(y);
-//            code.dualEncode2<block, block>(z0, y);
+//            code.dualEncode<block>(z0);
+//            code.dualEncode<block>(y);
+            code.dualEncode2<block, block>(z0, y);
 
             for (u64 i = 0; i < n; ++i)
             {
