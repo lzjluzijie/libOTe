@@ -17,6 +17,34 @@ namespace osuCrypto::Subfield
     {
         {
             u64 n = 1024;
+            ExConvCode<TypeTraitTest> code;
+            code.config(n / 2, n, 7, 24, true);
+
+            PRNG prng(ZeroBlock);
+            F128 delta = prng.get<F128>();
+            std::vector<F128> y(n), z0(n), z1(n);
+            prng.get(y.data(), y.size());
+            prng.get(z0.data(), z0.size());
+            for (u64 i = 0; i < n; ++i)
+            {
+                z1[i] = z0[i] + delta * y[i];
+            }
+
+            code.dualEncode<F128>(z1);
+            code.dualEncode<F128>(z0);
+            code.dualEncode<F128>(y);
+
+            for (u64 i = 0; i < n; ++i)
+            {
+                F128 left = delta * y[i];
+                F128 right = z1[i] - z0[i];
+                if (left != right)
+                    throw RTE_LOC;
+            }
+        }
+
+        {
+            u64 n = 1024;
             ExConvCode<TypeTraitF128> code;
             code.config(n / 2, n, 7, 24, true);
 

@@ -8,27 +8,27 @@ namespace osuCrypto::Subfield {
         block b;
         F128() = default;
         explicit F128(const block& b) : b(b) {}
-//        OC_FORCEINLINE F128 operator+(const F128& rhs) const {
-//            F128 ret;
-//            ret.b = b ^ rhs.b;
-//            return ret;
-//        }
-//        OC_FORCEINLINE F128 operator-(const F128& rhs) const {
-//            F128 ret;
-//            ret.b = b ^ rhs.b;
-//            return ret;
-//        }
-//        OC_FORCEINLINE F128 operator*(const F128& rhs) const {
-//            F128 ret;
-//            ret.b = b.gf128Mul(rhs.b);
-//            return ret;
-//        }
-//        OC_FORCEINLINE bool operator==(const F128& rhs) const {
-//            return b == rhs.b;
-//        }
-//        OC_FORCEINLINE bool operator!=(const F128& rhs) const {
-//            return b != rhs.b;
-//        }
+        OC_FORCEINLINE F128 operator+(const F128& rhs) const {
+            F128 ret;
+            ret.b = b ^ rhs.b;
+            return ret;
+        }
+        OC_FORCEINLINE F128 operator-(const F128& rhs) const {
+            F128 ret;
+            ret.b = b ^ rhs.b;
+            return ret;
+        }
+        OC_FORCEINLINE F128 operator*(const F128& rhs) const {
+            F128 ret;
+            ret.b = b.gf128Mul(rhs.b);
+            return ret;
+        }
+        OC_FORCEINLINE bool operator==(const F128& rhs) const {
+            return b == rhs.b;
+        }
+        OC_FORCEINLINE bool operator!=(const F128& rhs) const {
+            return b != rhs.b;
+        }
     };
 
     /*
@@ -107,6 +107,42 @@ namespace osuCrypto::Subfield {
         }
         static OC_FORCEINLINE F pow(u64 power) {
             F ret = ZeroBlock;
+            *BitIterator((u8*)&ret, power) = 1;
+            return ret;
+        }
+    };
+
+    struct TypeTraitTest {
+        using G = F128;
+        using F = F128;
+
+        static constexpr size_t bitsG = sizeof(G) * 8;
+        static constexpr size_t bitsF = sizeof(F) * 8;
+        static constexpr size_t bytesG = sizeof(G);
+        static constexpr size_t bytesF = sizeof(F);
+
+        static OC_FORCEINLINE F plus(const F& lhs, const F& rhs) {
+            return lhs + rhs;
+        }
+        static OC_FORCEINLINE F minus(const F& lhs, const F& rhs) {
+            return lhs - rhs;
+        }
+        static OC_FORCEINLINE F mul(const F& lhs, const F& rhs) {
+            return lhs * rhs;
+        }
+        static OC_FORCEINLINE bool eq(const F& lhs, const F& rhs) {
+            return lhs == rhs;
+        }
+
+        static OC_FORCEINLINE BitVector BitVectorF(F& x) {
+            return {(u8*)&x, bitsF};
+        }
+
+        static OC_FORCEINLINE F fromBlock(const block& b) {
+            return F128{b};
+        }
+        static OC_FORCEINLINE F pow(u64 power) {
+            F ret{ZeroBlock};
             *BitIterator((u8*)&ret, power) = 1;
             return ret;
         }
